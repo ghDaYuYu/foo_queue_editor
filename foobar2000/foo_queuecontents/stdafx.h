@@ -5,8 +5,9 @@
 
 #pragma once
 
-#define COMPONENTNAME "Queue Contents Editor"
-#define COMPONENTVERSION "0.5.2"
+#include "version.h"
+
+#define FOOBAR2000_HAVE_CFG_VAR_LEGACY
 #define COMPONENTCONFIGVERSION 4
 
 // Changelog in config versions
@@ -16,26 +17,21 @@ v4:
 */
 
 #define TITLEFORMAT_WIKIPAGEURL "http://wiki.hydrogenaudio.org/index.php?title=Foobar2000:Titleformat_Reference"
-#define COMPONENT_WIKIPAGEURL "http://wiki.hydrogenaudio.org/index.php?title=Foobar2000:Components/Queue_Contents_Editor_(foo_queuecontents)"
+#define COMPONENT_WIKIPAGEURL "http://wiki.hydrogenaudio.org/index.php?title=Foobar2000:Components/Queue_Editor_(foo_queue_editor)"
 #define FORUMURL "http://www.hydrogenaudio.org/forums/index.php?showtopic=73648"
+
+#include <helpers/foobar2000+atl.h>
+#include <memory>
+
+#pragma warning(push, 1)
+#pragma warning(disable : 4068)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 
 #include "targetver.h"
 
-// cms070922: new for wtl8.0 to get atldlgs.h to compile.
-#define _WTL_FORWARD_DECLARE_CSTRING
-
-#include "atlbase.h"
-#include "atlapp.h"
-// http://www.programforge.com/7241208511/
-#define __ATLTYPES_H__
-#include <atlmisc.h>  
-
-#include "../ATLHelpers/ATLHelpers.h"
-#include "../SDK/foobar2000.h"
-#include "../helpers/helpers.h"
-//#include "../SDK/component.h"
-//#include "atlframe.h" //WTL::CDialogResize
-//#include "atlctrlx.h" //WTL::CWaitCursor
+#include <helpers/foobar2000+atl.h>
+#include "libPPUI/win32_op.h"
 
 #include "resource.h"
 #include "guids.h"

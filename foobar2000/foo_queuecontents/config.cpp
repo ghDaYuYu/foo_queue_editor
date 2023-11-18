@@ -31,7 +31,7 @@ FB2K_STREAM_READER_OVERLOAD(ui_column_definition) {
 		stream >> value.m_alignment;
 		
 	} catch(exception_io_data_truncation e) {
-		console::warning(COMPONENTNAME ": Failed to read ui column definition.");
+		console::warning(COMPONENT_NAME_HC ": Failed to read ui column definition.");
 		value.m_name = pfc::string8("INVALID");
 		value.m_pattern = pfc::string8("INVALID");
 		value.m_alignment = COLUMN_ALIGNMENT_LEFT;

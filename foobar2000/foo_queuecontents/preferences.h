@@ -1,6 +1,4 @@
 #pragma once
-
-#include "stdafx.h"
 #include "config.h"
 #include "queuecontents_lock.h"
 #include "PropertyGrid.h"
@@ -9,6 +7,9 @@
 #include "CPropertyEditWindowWithAutomaticSave.h"
 #include "CustomPropertyGrid.h"
 #include "queuecontents_lock.h"
+
+#include "guids.h"
+#include "helpers\atl-misc.h"
 
 #define NAME_COLUMN_TEXT "Name"
 #define PATTERN_COLUMN_TEXT "Pattern"
@@ -45,7 +46,7 @@ public:
 		COMMAND_HANDLER(IDC_BUTTON_ADD_COLUMN, BN_CLICKED, OnBnClickedButtonAddColumn)
 		COMMAND_HANDLER(IDC_BUTTON_REMOVE_COLUMN, BN_CLICKED, OnBnClickedButtonRemoveColumn)
 		COMMAND_HANDLER(IDC_BUTTON_SYNTAX_HELP, BN_CLICKED, OnBnClickedButtonSyntaxHelp)
-		NOTIFY_CODE_HANDLER(PIN_ITEMCHANGED, OnUIColumnChanged);	
+		//todo NOTIFY_CODE_HANDLER(PIN_ITEMCHANGED, OnUIColumnChanged);
 		REFLECT_NOTIFICATIONS()			
 	END_MSG_MAP()
 private:
@@ -76,7 +77,7 @@ class preferences_page_myimpl : public preferences_page_impl<CMyPreferences> {
 	// preferences_page_impl<> helper deals with instantiation of our dialog; inherits from preferences_page_v3.
 public:
 	const char * get_name() {
-		return COMPONENTNAME;
+		return COMPONENT_NAME_HC;
 	}
 	
 	GUID get_guid() {

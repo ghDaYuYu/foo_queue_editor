@@ -118,7 +118,7 @@ void queuecontents_lock::get_lock_name(pfc::string_base & p_out)
 }
 void queuecontents_lock::show_ui()
 {
-	console::formatter() << "No UI available for " COMPONENTNAME ". See Settings for configuration.";
+	console::formatter() << "No UI available for " COMPONENT_NAME_H ". See Settings for configuration.";
 }
 //! Queries which actions the lock filters. The return value must not change while the lock is registered with playlist_manager. The return value is a combination of one or more filter_* constants.
 t_uint32 queuecontents_lock::get_filter_mask()

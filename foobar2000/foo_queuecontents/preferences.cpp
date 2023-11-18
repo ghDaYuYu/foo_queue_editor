@@ -137,8 +137,8 @@ void CMyPreferences::reset() {
 void CMyPreferences::apply() {
 	
 	pfc::string8 playlist_name;
-	cfg_playlist_enabled = IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED;	
-	playlist_name = string_utf8_from_window(*this, IDC_PLAYLIST_NAME);
+	cfg_playlist_enabled = IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED;
+	playlist_name = uGetDlgItemText(m_hWnd, IDC_PLAYLIST_NAME);
 
 	// Rename current queue playlist if necessary
 	if(cfg_playlist_enabled && playlist_name != cfg_playlist_name){
@@ -198,7 +198,7 @@ bool CMyPreferences::HasChanged() {
 	// make sure we have normalized booleans for direct comparison with == and !=
 	bool playlist_enabled = (IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED) != 0;	
 	bool playlist_enabled_cfg = cfg_playlist_enabled != 0;
-	playlist_name = string_utf8_from_window(*this, IDC_PLAYLIST_NAME);
+	playlist_name = uGetDlgItemText(m_hWnd, IDC_PLAYLIST_NAME);
 	
 	
 	//returns whether our dialog content is different from the current configuration (whether the apply button should be enabled or not)

@@ -89,9 +89,9 @@ FB2K_STREAM_READER_OVERLOAD(ui_element_settings) {
 		// succeed reading the version it *probably* means
 		// we are constructing new settings
 		if(version != -1) {
-			console::warning(COMPONENTNAME ": Failed to read ui element settings. Reseting settings.");
+			console::warning(COMPONENT_NAME_HC ": Failed to read ui element settings. Reseting settings.");
 		} else {
-			console::info(COMPONENTNAME ": Constructing default settings for ui element.");
+			console::info(COMPONENT_DESC ": Constructing default settings for ui element.");
 		}
 		value.m_show_column_header = true;
 		value.m_relative_column_widths = false;

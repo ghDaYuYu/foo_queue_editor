@@ -8,10 +8,10 @@ void ui_element_base::InvalidateWnd() {
 	::InvalidateRect(m_listview, NULL, TRUE);
 }
 
-BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {	
+BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 	TRACK_CALL_TEXT("ui_element_base::OnInitDialog");
 	inited_successfully = false;
-	CRect rect;    	
+	CRect rect;
 	if(wnd == NULL) {
 		rect.bottom = rect.top = rect.left = rect.right = 0;
 	} else {

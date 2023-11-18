@@ -1,5 +1,5 @@
 #pragma once
-#include "stdafx.h"
+#include <helpers/atl-misc.h>
 #include "ui_element_configuration.h"
 #include "ui_element_host.h"
 #include "window_manager.h"
@@ -41,7 +41,7 @@ protected:
 	virtual void RefreshVisuals();	
 	// when window dies
 	virtual void OnFinalMessage(HWND /*hWnd*/);
-	CCustomListView m_listview;	
+	CCustomListView m_listview;
 	ui_element_settings m_settings;
 
 	bool inited_successfully;

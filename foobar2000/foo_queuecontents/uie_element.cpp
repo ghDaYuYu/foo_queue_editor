@@ -40,7 +40,7 @@ void uie_element::save_configuration() {
 }
 
 LRESULT uie_element::on_message(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{	
+{
 	TRACK_CALL_TEXT("uie_element::on_message");
 	BOOL bRet = TRUE;
 	LRESULT lResult = 0;
