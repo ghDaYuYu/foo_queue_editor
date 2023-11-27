@@ -25,6 +25,5 @@ DECLARE_COMPONENT_VERSION(
 	"Please use this thread on hydrogenaudio forums to provide feedback, or to report any bugs you might have found: " FORUMURL 
 );
 
-
 // This will prevent users from renaming your component around (important for proper troubleshooter behaviors) or loading multiple instances of it.
 VALIDATE_COMPONENT_FILENAME("foo_queue_editor.dll");

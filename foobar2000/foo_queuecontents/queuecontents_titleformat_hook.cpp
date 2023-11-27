@@ -31,7 +31,7 @@ t_playback_queue_item queuecontents_titleformat_hook::getQueueItem() {
 	return m_queue_item;
 }
 
-bool queuecontents_titleformat_hook::process_field(titleformat_text_out * 	p_out,
+bool queuecontents_titleformat_hook::process_field(titleformat_text_out * p_out,
 		const char * 	p_name,
 		t_size 	p_name_length,
 		bool & 	p_found_flag) {
@@ -51,17 +51,17 @@ bool queuecontents_titleformat_hook::process_field(titleformat_text_out * 	p_out
 			p_found_flag = true;
 			return true;
 		}
-				
+
 		p_found_flag = false;
 		return false;
 }
 		
 
-bool queuecontents_titleformat_hook::process_function(titleformat_text_out * 	p_out,
-		const char * 	p_name,
-		t_size 	p_name_length,
-		titleformat_hook_function_params * 	p_params,
-		bool & 	p_found_flag) {
+bool queuecontents_titleformat_hook::process_function(titleformat_text_out * p_out,
+		const char * p_name,
+		t_size p_name_length,
+		titleformat_hook_function_params * p_params,
+		bool & p_found_flag) {
 		// Do not process functions
 		return false;
 }

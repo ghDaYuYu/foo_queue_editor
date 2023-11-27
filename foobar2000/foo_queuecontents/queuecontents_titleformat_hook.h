@@ -69,9 +69,3 @@ private:
 	titleformat_hook_impl_list_custom m_list_hook; // %list_index% and %list_total%
 	titleformat_hook_impl_list_custom m_queue_list_hook; // %queue_index% and %queue_total%
 };
-
-
-
-
-
-

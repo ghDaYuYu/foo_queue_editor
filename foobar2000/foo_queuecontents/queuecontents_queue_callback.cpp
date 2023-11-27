@@ -5,9 +5,6 @@ class queuecontents_queue_callback : public playback_queue_callback {
 public:
 	virtual void on_changed(t_change_origin p_origin)
 	{
-#ifdef _DEBUG
-		//console::formatter() << "Queue updated. Calling windowmanager::GlobalRedraw().";
-#endif
 		static_api_ptr_t<main_thread_callback_manager>()->add_callback(new service_impl_t<global_refresh_callback>());
 	}
 };

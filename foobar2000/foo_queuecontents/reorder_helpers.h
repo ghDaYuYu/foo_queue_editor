@@ -6,8 +6,8 @@ public:
 
 	// moves items so that the "structure" holds
 	// same as ctrl+shift+cursor move in foobar standard playlist
-	static void move_items_hold_structure_reordering(bool up, 
-		const pfc::list_base_const_t<t_size> & indices_to_move, 
+	static void move_items_hold_structure_reordering(bool up,
+		const pfc::list_base_const_t<t_size> & indices_to_move,
 		pfc::list_base_t<t_size> & new_indices, 
 		pfc::list_t<t_size>& ordering, 
 		t_size item_count) {
@@ -39,7 +39,7 @@ public:
 		PFC_ASSERT(item_count >= indices_to_move_count);
 
 		ordering.remove_all();
-		new_indices.remove_all();		
+		new_indices.remove_all();
 
 		pfc::avltree_t<t_size> indices_to_move_tree(indices_to_move);
 
@@ -47,7 +47,7 @@ public:
 		
 		bool start_swapping = false;
 		if(up) {
-			for(t_size i = 0; i < item_count-1; i++) {			
+			for(t_size i = 0; i < item_count-1; i++) {
 				bool cur_exists = indices_to_move_tree.exists(i);
 				bool next_exists = indices_to_move_tree.exists(i+1);
 				
@@ -71,7 +71,7 @@ public:
 			}
 		} else {
 			// Same as before but backwards
-			for(t_size i = item_count-1; i > 0; i--) {			
+			for(t_size i = item_count-1; i > 0; i--) {
 				bool cur_exists = indices_to_move_tree.exists(i);
 				bool next_exists = indices_to_move_tree.exists(i-1);
 				
@@ -102,7 +102,7 @@ public:
 			PFC_ASSERT(new_index != pfc::infinite_size);
 			DEBUG_PRINT << "Selection:" << indices_to_move[i] << "->" << new_index;
 			new_indices.add_item(new_index);
-		}		
+		}
 	}
 
 	static void move_items_reordering(int moveIndex, const pfc::list_base_const_t<t_size> & indicesToMove, pfc::list_base_t<t_size> & newIndices, pfc::list_t<t_size>& ordering, int item_count) {
@@ -151,4 +151,3 @@ public:
 		}
 	}
 };
-

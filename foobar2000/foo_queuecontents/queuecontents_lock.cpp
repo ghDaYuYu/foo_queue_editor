@@ -12,26 +12,15 @@ bool queuecontents_lock::updateQueuePlaylist = true;
 //! @param p_data Items being inserted.
 //! @param p_selection Caller-requested selection state of items being inserted.
 //! @returns True to allow the operation, false to block it.
+
 bool queuecontents_lock::query_items_add(t_size p_base, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection)
 {
 	TRACK_CALL_TEXT("queuecontents_lock::query_items_add");
 	DEBUG_PRINT << "query_items_add";
 	if(!updateQueuePlaylist) {
-#ifdef _DEBUG
-		DEBUG_PRINT << "Queue playlist: query_items_add. Allowing action, but not propagating it to queue.";
-		DEBUG_PRINT << "First two items:";
-		if(p_data.get_count() > 0)
-			DEBUG_PRINT << p_data[0]->get_path();
-		if(p_data.get_count() > 1)
-			DEBUG_PRINT << p_data[1]->get_path();
-#endif
 		return true;
 	}
 
-#ifdef _DEBUG
-	console::formatter() << "Queue playlist: Adding items to queue";
-#endif
-	
 	// We've already done the queue changes so we do *not*
 	// want them propagated back again
 	updateQueuePlaylist = false;
@@ -68,10 +57,6 @@ bool queuecontents_lock::query_items_remove(const bit_array & p_mask, bool p_for
 		return true;
 	}
 
-#ifdef _DEBUG
-	console::formatter() << "Removing queue with mask...";
-#endif
-
 	// We've already done the queue changes so we do *not*
 	// want them propagated back again
 	updateQueuePlaylist = false;
@@ -107,10 +92,7 @@ void queuecontents_lock::on_playlist_index_change(t_size p_new_index)
 }
 void queuecontents_lock::on_playlist_remove()
 {
-
-#ifdef _DEBUG
-	console::formatter() << cfg_playlist_name << " removed!";
-#endif
+	//..
 }
 void queuecontents_lock::get_lock_name(pfc::string_base & p_out)
 {
@@ -143,9 +125,6 @@ void queuecontents_lock::clean_lock_playlist()
 	}
 
 
-#ifdef _DEBUG
-	//console::formatter() << "Deletion and Insertion operations are now disabled.";
-#endif
 
 	//disable delete and insert triggers
 	updateQueuePlaylist = false;		
@@ -153,9 +132,6 @@ void queuecontents_lock::clean_lock_playlist()
 	playlist_api->playlist_clear(queuePlaylistIndex);		
 	playlist_api->playlist_add_items(queuePlaylistIndex, queue_metadbs, bit_array_true());
 
-#ifdef _DEBUG
-	//console::formatter() << "Deletion and Insertion operations are now enabled.";
-#endif
 
 	//restore delete and insert triggers
 	updateQueuePlaylist = true;
@@ -183,9 +159,6 @@ void queuecontents_lock::install_lock() {
 
 	window_manager::AddWindow(&m_playlist_updater);
 
-#ifdef _DEBUG
-	console::formatter() << cfg_playlist_name << "-playlist locked successfully?: " << playlist_api->playlist_lock_is_present(queuePlaylistIndex);
-#endif
 }
 
 
@@ -198,9 +171,6 @@ void queuecontents_lock::uninstall_lock() {
 			playlist_api->playlist_lock_uninstall(queuePlaylistIndex, plLock);			
 		}
 		plLock.release();
-#ifdef _DEBUG
-	console::formatter() << cfg_playlist_name << "-playlist unlocked successfully?: " << !(playlist_api->playlist_lock_is_present(queuePlaylistIndex));
-#endif
 	}
 
 	window_manager::RemoveWindow(&m_playlist_updater);
@@ -234,6 +204,6 @@ t_size queuecontents_lock::find_playlist() {
 			}
 		}
 	}
-
 	return pfc::infinite_size;
 }
+

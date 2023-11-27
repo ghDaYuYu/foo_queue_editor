@@ -1,5 +1,4 @@
 #pragma once
-#include "stdafx.h"
 #include "window_manager.h"
 #include "reorder_helpers.h"
 
@@ -262,7 +261,7 @@ public:
 
 		playlist_api->queue_flush();
 
-		queue.for_each(add_queue_item);				
+		queue.for_each(add_queue_item);
 	}
 
 	static void extract_metadb_handles(const pfc::list_t<t_playback_queue_item>& queue_items, metadb_handle_list_ref p_out) {

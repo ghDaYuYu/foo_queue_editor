@@ -9,7 +9,6 @@ playlist_queue_item_watcher::~playlist_queue_item_watcher() {
 	window_manager::RemoveWindow(this);
 }
 
-
 void playlist_queue_item_watcher::Refresh() {
 	TRACK_CALL_TEXT("playlist_queue_item_watcher::Refresh");
 
@@ -24,7 +23,6 @@ void playlist_queue_item_watcher::Refresh() {
 	}
 	invalidated = false;
 }
-
 
 void playlist_queue_item_watcher::addToWatchList(t_playback_queue_item item) {
 	TRACK_CALL_TEXT("playlist_queue_item_watcher::addToWatchList");
@@ -78,7 +76,6 @@ void playlist_queue_item_watcher::on_items_removed(t_size p_playlist,const bit_a
 	globalRefresh();
 }
 
-
 void playlist_queue_item_watcher::on_items_modified(t_size p_playlist,const bit_array & p_mask) {
 	TRACK_CALL_TEXT("playlist_queue_item_watcher::on_items_modified");
 	if(invalidated) return;
@@ -94,7 +91,6 @@ void playlist_queue_item_watcher::on_items_replaced(t_size p_playlist,const bit_
 	invalidated = true;
 	globalRefresh();
 }
-
 
 void playlist_queue_item_watcher::on_playlists_removed(const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {
 	TRACK_CALL_TEXT("playlist_queue_item_watcher::on_playlists_removed");

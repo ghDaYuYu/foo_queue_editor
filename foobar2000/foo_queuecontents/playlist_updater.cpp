@@ -3,8 +3,6 @@
 #include "queuecontents_lock.h"
 #include "queue_helpers.h"
 
-
-
 void playlist_updater::Refresh(){
 	TRACK_CALL_TEXT("playlist_updater::Refresh");
 	DEBUG_PRINT << "Updating queue playlist";
@@ -12,11 +10,10 @@ void playlist_updater::Refresh(){
 		DEBUG_PRINT << "Updating queue playlist....Stopping the update";
 		return;
 	}
-	
+
 	static_api_ptr_t<playlist_manager> playlist_api;
 	t_size queuePlaylistIndex = queuecontents_lock::find_or_create_playlist();
-	
-	
+
 	pfc::list_t<t_playback_queue_item> queue;
 	pfc::list_t<metadb_handle_ptr> queue_metadbs;
 	playlist_api->queue_get_contents(queue);
@@ -57,4 +54,3 @@ void playlist_updater::Refresh(){
 	queue.remove_all();
 
 }
-

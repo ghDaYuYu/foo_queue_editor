@@ -1,6 +1,4 @@
 #pragma once
-
-#include "stdafx.h"
 #include "config.h"
 #include "config.h"
 #include "window_manager.h"
@@ -9,9 +7,8 @@
 // Forward-declare
 class playlist_updater;
 
-class queuecontents_lock : public playlist_lock {	
+class queuecontents_lock : public playlist_lock {
 public:
-
 
 	//! Queries whether specified item insertiion operation is allowed in the locked playlist.
 	//! @param p_base Index from which the items are being inserted.
@@ -44,20 +41,7 @@ public:
 
 private:
 	static void clean_lock_playlist();
-	static playlist_updater m_playlist_updater;	
+	static playlist_updater m_playlist_updater;
 	static service_ptr_t<queuecontents_lock> plLock;
 	
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
