@@ -1,108 +1,96 @@
 #include "stdafx.h"
+#include <algorithm>
+#include "yesno_dialog.h"
 #include "preferences.h"
 
+using namespace cfg_var_legacy;
+
 CMyPreferences::~CMyPreferences() {
-	m_guids.free_all();
+
+	m_static_header.Detach();
 }
 
 BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 
-	m_alignment_values[0] = _T(ALIGNMENT_LEFT);
-	m_alignment_values[1] = _T(ALIGNMENT_CENTER);
-	m_alignment_values[2] = _T(ALIGNMENT_RIGHT);
-	m_alignment_values[3] = NULL;
-	
-	// matching values of above
-	m_alignment_cfg_values[0] = COLUMN_ALIGNMENT_LEFT;
-	m_alignment_cfg_values[1] = COLUMN_ALIGNMENT_CENTER;
-	m_alignment_cfg_values[2] = COLUMN_ALIGNMENT_RIGHT;
-	m_alignment_cfg_values[3] = -1;
-	
-	m_grid.SubclassWindow(GetDlgItem(IDC_LIST_COLUMN_FORMATS));
+	HWND wndStHeader = uGetDlgItem(IDC_STATIC_HEADER);
+	m_static_header.SubclassWindow(wndStHeader);
+	m_static_header.PaintHeader();
 
-	m_grid.InsertColumn(0, _T(NAME_COLUMN_TEXT), LVCFMT_LEFT, 165, 0);
-	m_grid.InsertColumn(1, _T(PATTERN_COLUMN_TEXT), LVCFMT_LEFT, 235, 0);
-	m_grid.InsertColumn(2, _T(ALIGNMENT_COLUMN_TEXT), LVCFMT_LEFT, 60, 0);
+	m_field_list.CreateInDialog(*this, IDC_FIELD_LIST);
+	m_field_list.InitializeHeaderCtrl(HDS_FLAT);
 
-	m_grid.SetExtendedGridStyle(PGS_EX_SINGLECLICKEDIT);
+	m_field_list.AddColumn(NAME_COLUMN_TEXT, 165);
+	m_field_list.AddColumn(PATTERN_COLUMN_TEXT, 235);
+	m_field_list.AddColumn(ALIGNMENT_COLUMN_TEXT, 60);
 
-	
+	m_dark.AddDialogWithControls(m_hWnd);
 
-
-	UpdateColumnDefinitionsFromCfg();
-
-	
 	m_columns_dirty = false;
 
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, cfg_playlist_name);
+
+	//todo
+	const pfc::string8 tt_obs = "Note:\r\n%queue_index%, %queue_total%, " \
+		"%list_index% and %list_total% work here. Use %playlist_name% for the playlist of the queued item.";
+	uSetDlgItemText(m_hWnd, IDC_TT_OBS, tt_obs);
+
 	// Enable/Disable playlist name control
 	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(cfg_playlist_enabled);
+
 	return TRUE;
 }
 
-void CMyPreferences::UpdateColumnDefinitionsFromCfg(const pfc::map_t<long, ui_column_definition>& config /*= cfg_ui_columns*/) {
-	
-	if(m_grid.GetColumnCount() > 0) {
-		// DeleteAllItems does not work (probably bug
-		// in PropertyGrid) so we use this little hack
-		while(m_grid.GetItemCount() > 0)
-			m_grid.DeleteItem(0);
+void CMyPreferences::OnContextMenu(CWindow wnd, CPoint point) {
 
-		m_guids.free_all();
-	}
-	
-	int i = 0;
-	for(pfc::map_t<long, ui_column_definition>::const_iterator iter = config.first();
-		iter.is_valid(); iter++) {
-		HPROPERTY name = PropCreateSimpleWithAutosave(_T(""), pfc::stringcvt::string_os_from_utf8(iter->m_value.m_name));
-		HPROPERTY pattern = PropCreateSimpleWithAutosave(_T(""), pfc::stringcvt::string_os_from_utf8(iter->m_value.m_pattern));
+	if (wnd == m_field_list) {
 
-		// We find the item to select...
-		t_size list_value_index;
-		for(list_value_index = 0; m_alignment_cfg_values[list_value_index] != -1; list_value_index++) {
-			DEBUG_PRINT << "list_value_index: " << list_value_index;
-			if(m_alignment_cfg_values[list_value_index] == iter->m_value.m_alignment) {
-				DEBUG_PRINT << "Alignment cfg index: " << list_value_index;
-				break;
-			}
+		pfc::bit_array_bittable selmask = m_field_list.GetSelectionMask();
+
+		size_t curr_alignment = SIZE_MAX;
+
+		size_t csel = m_field_list.GetSelectedCount();
+		size_t isel = selmask.find_first(true, 0, data.size());
+
+		bool bsingle_sel = (csel == 1);
+
+		if (bsingle_sel) {
+			const field_t* entry = &data.at(isel);
+			alignment = entry->alignment;
+		}
+		else {
+			return;
 		}
 
+		CMenu menu;
+		WIN32_OP(menu.CreatePopupMenu());
+		menu.AppendMenu(MF_STRING | (bsingle_sel && alignment == HDF_LEFT ? MF_CHECKED : 0), (UINT_PTR)HDF_LEFT + 1, TEXT(ALIGNMENT_LEFT"\tL"));
+		menu.AppendMenu(MF_STRING | (bsingle_sel && alignment == HDF_CENTER ? MF_CHECKED : 0), (UINT_PTR)HDF_CENTER +1 , TEXT(ALIGNMENT_CENTER"\tC"));
+		menu.AppendMenu(MF_STRING | (bsingle_sel && alignment == HDF_RIGHT ? MF_CHECKED : 0), (UINT_PTR)HDF_RIGHT + 1, TEXT(ALIGNMENT_RIGHT"\tR"));
 
-		HPROPERTY alignment = PropCreateList(_T(""), m_alignment_values,  list_value_index);
-#ifdef _DEBUG
-		console::formatter() << "Reading column definitions from configuration:";
-		console::formatter() << NAME_COLUMN_TEXT << ": "<< iter->m_value.m_name;
-		console::formatter() << PATTERN_COLUMN_TEXT  << ": "<< iter->m_value.m_pattern;
-		console::formatter() << ALIGNMENT_COLUMN_TEXT  << ": "<< iter->m_value.m_alignment;
-		console::formatter() << "ID: " << iter->m_key;
-#endif
-		m_grid.InsertItem(i, name);
-		m_grid.SetSubItem(i, 1, pattern);
-		m_grid.SetSubItem(i, 2, alignment);
-		long id = iter->m_key;
+		CMenuDescriptionMap receiver(*this);
+		//todo
+		receiver.Set(HDF_LEFT, "");
+		receiver.Set(HDF_CENTER, "");
+		receiver.Set(HDF_RIGHT, "");
 
-		m_grid.SetItemData(name, id);
-#ifdef _DEBUG			
-		PFC_ASSERT(((long)m_grid.GetItemData(m_grid.GetProperty(i,0))) == id);
-#endif
-		i++;
+		int cmd = menu.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, point.x, point.y, receiver);
+
+		if (cmd) {
+
+			--cmd;
+
+			//todo
+			listSetEditField(nullptr, isel, /*aligment subitem*/2, std::to_string(cmd).c_str());
+			m_field_list.ReloadItem(isel);
+		}
 	}
+
+	return;
 }
 
-
-LRESULT CMyPreferences::OnUIColumnChanged(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-	LPNMPROPERTYITEM pnpi  = reinterpret_cast<LPNMPROPERTYITEM>( pnmh );
-	ATLTRACE(_T("OnUIColumnChanged - Ctrl: %d\n"), idCtrl); idCtrl;
-	m_columns_dirty = true;
-#ifdef _DEBUG
-	console::formatter() << "Column definitions changed: dirty!";
-#endif
-
-	OnChanged();
-	if( pnpi->prop==NULL ) return 0;	
-
-	return 0;
+void CMyPreferences::UpdateColumnDefinitionsFromCfg(const pfc::map_t<long, ui_column_definition>& config /*= cfg_ui_columns*/) {
+	//..
 }
 
 void CMyPreferences::OnEditChange(UINT, int, CWindow) {
@@ -114,28 +102,59 @@ void CMyPreferences::OnEditChange(UINT, int, CWindow) {
 }
 
 t_uint32 CMyPreferences::get_state() {
-	t_uint32 state = preferences_state::resettable;
+	t_uint32 state = preferences_state::resettable | preferences_state::dark_mode_supported;
 	if (HasChanged()) state |= preferences_state::changed;
 	return state;
 }
 
 void CMyPreferences::reset() {
+
+	CYesNoApiDialog yndlg;
+	if (!yndlg.query(m_hWnd, { "Reset", "Reset Queue Editor settings?" })) {
+		return;
+	}
+
+	//todo
+	m_columns_dirty = false;
+
+	size_t old_size = data.size();
+	cfg_ui_columns.remove_all(); //(1)
+	map_utils::fill_map_with_values(cfg_ui_columns, default_cfg_ui_columns);
+	init_data(); //(2)
+
+	//refresh data/scroll bar
+	size_t new_size = data.size();
+	if (old_size > new_size) {
+		bit_array_bittable delMask(bit_array_false(), old_size);
+		for (auto n = new_size; n < old_size; n++) {
+			delMask.set(n, true);
+		}
+		m_field_list.OnItemsRemoved(delMask, old_size);
+	}
+	else if (new_size > old_size) {
+		m_field_list.OnItemsInserted(0, new_size - old_size, false);
+	}
+	else {
+		m_field_list.ReloadData();
+		m_field_list.ReloadItems(bit_array_true());
+	}
+
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, default_cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, default_cfg_playlist_name);
 	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(default_cfg_playlist_enabled);
 	
 	pfc::map_t<long, ui_column_definition> column_list;
 	map_utils::fill_map_with_values(column_list, default_cfg_ui_columns);	
-	
-	UpdateColumnDefinitionsFromCfg(column_list);
-	
+
+	window_manager::UIColumnsChanged(true);
+	window_manager::GlobalRefresh();
 
 	m_columns_dirty = true;
 	OnChanged();
 }
 
 void CMyPreferences::apply() {
-	
+
 	pfc::string8 playlist_name;
 	cfg_playlist_enabled = IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED;
 	playlist_name = uGetDlgItemText(m_hWnd, IDC_PLAYLIST_NAME);
@@ -155,65 +174,114 @@ void CMyPreferences::apply() {
 		queuecontents_lock::uninstall_lock();
 	}
 
-	if(m_columns_dirty) {
+	if (m_columns_dirty) {
+
 		// apply column settings
-		t_size column_count = m_grid.GetItemCount();
-		cfg_ui_columns.remove_all();
-		for(t_size i = 0; i < column_count; i++) {
-			ui_column_definition definition;
 
-			HPROPERTY prop = m_grid.GetProperty(i, 0);
-			HPropertyHelpers::GetDisplayValue(prop, definition.m_name);			
-
-			prop = m_grid.GetProperty(i, 1);
-			HPropertyHelpers::GetDisplayValue(prop, definition.m_pattern);						
-			
-			CComVariant value;			
-			prop = m_grid.GetProperty(i, 2);
-			m_grid.GetItemValue(prop, &value);			
-			definition.m_alignment = m_alignment_cfg_values[value.intVal];
-
-			long id = (long)m_grid.GetItemData(m_grid.GetProperty(i, 0));
-	
-#ifdef _DEBUG
-			console::formatter() << "Updating cfg column definition with ID " <<  ((long)m_grid.GetItemData(m_grid.GetProperty(i, 0)));
-#endif
-			cfg_ui_columns.set(id, definition);
+		long max_id = 0;
+		if (data.size()) {
+			max_id = std::max_element(data.begin(),
+			data.end(),
+			[](const auto& a, const auto& b) {
+				return a.id < b.id;
+			})->id;
 		}
 
-		window_manager::UIColumnsChanged();
-		window_manager::GlobalRefresh();
+		for (auto rec_it = data.begin(); rec_it != data.end(); rec_it++) {
+			//todo: also if rec_it->id == LONG_MAX 
+			auto &iter = cfg_ui_columns.find(rec_it->id);
+			if (iter.is_valid()) {
+				//update
+				if (!(iter->m_value.m_name.equals(rec_it->name) &&
+					iter->m_value.m_pattern.equals(rec_it->pattern) &&
+					iter->m_value.m_alignment == rec_it->alignment)) 
+				{
+					iter->m_value.m_name = rec_it->name;
+					iter->m_value.m_pattern = rec_it->pattern;
+					iter->m_value.m_alignment = rec_it->alignment;
+				}
+				continue;
+			}
+			else {
+				//add
+				ui_column_definition cfg_def;
+				cfg_def.m_name = rec_it->name;
+				cfg_def.m_pattern = rec_it->pattern;
+				cfg_def.m_alignment = rec_it->alignment;
+
+				cfg_ui_columns.set(++max_id, cfg_def);
+
+				continue;
+			}
+		}
+
+		//del key/button...
+		for (auto d : m_user_removals) {
+			if (d != LONG_MAX) {
+				auto& iter = cfg_ui_columns.find(d);
+				if (iter.is_valid()) {
+					cfg_ui_columns.remove(iter);
+				}
+			}
+		}
 		
+		m_user_removals.clear();
+
+		window_manager::SaveUILayout();
+		window_manager::UIColumnsChanged(false);
+		window_manager::GlobalRefresh();
 	}
 
 	cfg_playlist_name = playlist_name;
-
 	m_columns_dirty = false;
-	OnChanged(); //our dialog content has not changed but the flags have - our currently shown values now match the settings so the apply button can be disabled
+
+	OnChanged();
 }
 
 bool CMyPreferences::HasChanged() {
+
+	m_columns_dirty = false;
+
 	pfc::string8 playlist_name;
 	pfc::string8 ui_format;
+
+	//todo
 	// make sure we have normalized booleans for direct comparison with == and !=
-	bool playlist_enabled = (IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED) != 0;	
+	bool playlist_enabled = (IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED) != 0;
 	bool playlist_enabled_cfg = cfg_playlist_enabled != 0;
+
 	playlist_name = uGetDlgItemText(m_hWnd, IDC_PLAYLIST_NAME);
 	
-	
-	//returns whether our dialog content is different from the current configuration (whether the apply button should be enabled or not)
+	bool bfields_changed = data.size() != cfg_ui_columns.get_count();
+
+	m_columns_dirty = cfg_ui_columns.get_count() != data.size();
+
+	if (!m_columns_dirty) {
+
+		int c = 0;
+		for (auto w : cfg_ui_columns) {
+
+			field_t rec = { w.m_key, w.m_value.m_name, w.m_value.m_pattern, w.m_value.m_alignment };
+			auto dbg = data.at(c);
+			if (!(rec == data.at(c))) {
+				m_columns_dirty = true;
+				break;
+			}
+			c++;
+		}
+	}
+
+	//returns whether our dialog content is different from the current configuration
+	//(whether the apply button should be enabled or not)
 	return (playlist_enabled != playlist_enabled_cfg )
 		|| (playlist_name != cfg_playlist_name)
 		|| m_columns_dirty;
 }
+
 void CMyPreferences::OnChanged() {
-	//tell the host that our state has changed to enable/disable the apply button appropriately.
+	//refresh the apply button state
 	m_callback->on_state_changed();
 }
-
-
-static preferences_page_factory_t<preferences_page_myimpl> g_preferences_page_myimpl_factory;
-
 
 LRESULT CMyPreferences::OnBnClickedPlaylistEnabled(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
@@ -223,63 +291,36 @@ LRESULT CMyPreferences::OnBnClickedPlaylistEnabled(WORD /*wNotifyCode*/, WORD /*
 	return 0;
 }
 
-
 LRESULT CMyPreferences::OnBnClickedButtonAddColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	HPROPERTY name = PropCreateSimple(_T(""), _T(NAME_COLUMN_TEXT));
-	HPROPERTY pattern = PropCreateSimple(_T(""), _T(PATTERN_COLUMN_TEXT));
-	HPROPERTY alignment = PropCreateList(_T(""), m_alignment_values, COLUMN_ALIGNMENT_LEFT);
-	
-	// Generate new id so it's 1 larger than any of the used columns.
-	long cfg_max_id = LONG_MAX;
-	int current_count = m_grid.GetItemCount();
-	if(cfg_ui_columns.query_nearest_ptr<true, true, long>(cfg_max_id) == NULL) {
-		cfg_max_id = -1;
-	}
+	field_t new_rec{ LONG_MAX, "new field", "", 0};
 
-	for(int i = 0; i < current_count; i++) {
-		long id = (long)m_grid.GetItemData(m_grid.GetProperty(i,0));
-		if(id > cfg_max_id)
-			cfg_max_id = id;
-	}
+	data.emplace_back(new_rec);
+	m_field_list.ReloadItem(data.size() - 1);
+	m_field_list.OnItemsInserted(data.size() - 1, 1, true);
 
-	
-	long new_id = max(cfg_max_id, 0) + 1;
-
-	int i = m_grid.InsertItem(-1, name);
-	m_grid.SetSubItem(i, 1, pattern);
-	m_grid.SetSubItem(i, 2, alignment);
-	m_grid.SelectItem(i);
-	m_grid.SetItemData(name, new_id);
-
-#ifdef _DEBUG
-	console::formatter() << "New column definition with ID " << ((long)m_grid.GetItemData(m_grid.GetProperty(i,0))) << " added";
-	console::formatter() << "Column definition added: dirty!";
-#endif
 
 	m_columns_dirty = true;
 	OnChanged();
 	return 0;
 }
-
 
 LRESULT CMyPreferences::OnBnClickedButtonRemoveColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	int index = m_grid.GetSelectedIndex();
-	if(index >= 0) 
-		m_grid.DeleteItem(index);
-
-	m_columns_dirty = true;
-	OnChanged();
+	if (listRemoveItems(nullptr, m_field_list.GetSelectionMask())) {
+		m_columns_dirty = true;
+		OnChanged();
+	}
 
 	return 0;
 }
-
 
 LRESULT CMyPreferences::OnBnClickedButtonSyntaxHelp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	ShellExecute(NULL, _T("open"), _T(TITLEFORMAT_WIKIPAGEURL),
-                NULL, NULL, SW_SHOWNORMAL);
+			NULL, NULL, SW_SHOWNORMAL);
 	
 	return 0;
 }
+
+static preferences_page_factory_t<preferences_page_myimpl> g_preferences_page_myimpl_factory;
