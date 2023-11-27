@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -87,7 +87,7 @@
       <PreprocessorDefinitions>_WINDLL;WIN32;_UNICODE;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
@@ -202,20 +202,19 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="queue_list_control.cpp" />
     <ClCompile Include="config.cpp" />
-    <ClCompile Include="DragSourceNotifyImpl.cpp" />
-    <ClCompile Include="DropSourceImpl.cpp" />
-    <ClCompile Include="DropTargetImpl.cpp" />
     <ClCompile Include="dui_element.cpp" />
+    <ClCompile Include="header_static.cpp" />
     <ClCompile Include="playlist_queue_item_watcher.cpp" />
     <ClCompile Include="queuecontents_titleformat_hook.cpp" />
-    <ClCompile Include="listbox.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="playlist_updater.cpp" />
     <ClCompile Include="preferences.cpp" />
-    <ClCompile Include="queuecontents_initquit.cpp" />
+    <ClCompile Include="initquit.cpp" />
     <ClCompile Include="queuecontents_lock.cpp" />
     <ClCompile Include="queuecontents_queue_callback.cpp" />
+    <ClCompile Include="queue_list_control_ILO.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -228,29 +227,21 @@
     <ClCompile Include="window_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="queue_list_control.h" />
     <ClInclude Include="cfg_objMapWithDefault.h" />
     <ClInclude Include="config.h" />
-    <ClInclude Include="CPropertyEditWindowWithAutomaticSave.h" />
-    <ClInclude Include="CustomPropertyGrid.h" />
     <ClInclude Include="default_ui_hacks.h" />
-    <ClInclude Include="DropSourceImpl.h" />
-    <ClInclude Include="DropSourceNotifyImpl.h" />
-    <ClInclude Include="DropTargetImpl.h" />
     <ClInclude Include="dui_element.h" />
+    <ClInclude Include="header_static.h" />
     <ClInclude Include="playlist_queue_item_watcher.h" />
     <ClInclude Include="queuecontents_titleformat_hook.h" />
     <ClInclude Include="guids.h" />
-    <ClInclude Include="HPropertyHelpers.h" />
-    <ClInclude Include="listbox.h" />
     <ClInclude Include="playlist_updater.h" />
     <ClInclude Include="preferences.h" />
-    <ClInclude Include="PropertyGrid.h" />
-    <ClInclude Include="PropertyItem.h" />
-    <ClInclude Include="PropertyItemEditors.h" />
-    <ClInclude Include="PropertyItemImpl.h" />
-    <ClInclude Include="queuecontents_initquit.h" />
+    <ClInclude Include="initquit.h" />
     <ClInclude Include="queuecontents_lock.h" />
     <ClInclude Include="queue_helpers.h" />
+    <ClInclude Include="queue_list_control_ILO.h" />
     <ClInclude Include="reorder_helpers.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -261,6 +252,7 @@
     <ClInclude Include="ui_element_host.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="window_manager.h" />
+    <ClInclude Include="yesno_dialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_queuecontents.rc" />

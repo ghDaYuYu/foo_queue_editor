@@ -90,7 +90,7 @@ const CDialogResizeHelper::Param rz_params[] = {
 	{IDC_BUTTON_REMOVE_COLUMN, 1,0,1,0},
 	{IDC_BUTTON_SYNTAX_HELP, 1,0,1,0},
 	{IDC_FIELD_LIST, 0,0,1,0},
-	{IDC_STATIC_OBS, 0,0,1,0},
+	{IDC_TT_OBS, 0,0,1,0},
 	{IDC_STATIC_PL_OBS, 0,0,1,0},
 	{IDC_PLAYLIST_NAME, 0,0,1,0},
 };
