@@ -20,7 +20,7 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 
 	m_dark.AddDialogWithControls(parent);
 
-	m_guiList.CreateInDialog(get_wnd(), IDC_QUEUELIST);
+	m_guiList.CreateInDialog(parent, IDC_QUEUELIST);
 	m_guiList.InitializeHeaderCtrl(/*HDS_HIDDEN*/HDS_DRAGDROP | HDS_BUTTONS);
 
 	m_guiList.SetPlaylistStyle();

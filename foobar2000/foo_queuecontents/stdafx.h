@@ -8,7 +8,7 @@
 #include "version.h"
 
 #define FOOBAR2000_HAVE_CFG_VAR_LEGACY
-#define COMPONENTCONFIGVERSION 4
+#define COMPONENTCONFIGVERSION 5
 
 // Changelog in config versions
 /*
