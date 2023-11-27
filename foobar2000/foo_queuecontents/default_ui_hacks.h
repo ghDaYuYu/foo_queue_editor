@@ -37,7 +37,7 @@ private:
 		return ret;
 	}
 
-	static t_uint16 extractbyte(t_uint32 word, t_uint16 pos){		
+	static t_uint16 extractbyte(t_uint32 word, t_uint16 pos){
 		t_uint16 result;
 		if(pos == 0) {
 			result = word & 0xFF;
@@ -47,7 +47,5 @@ private:
 
 		return result;
 	}
-
-
 };
 

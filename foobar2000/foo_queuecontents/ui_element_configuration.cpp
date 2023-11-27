@@ -1,18 +1,18 @@
 #include "stdafx.h"
 #include "ui_element_configuration.h"
 
-bool ui_element_settings::column_exists(long column_id) {
-	TRACK_CALL_TEXT("ui_element_settings::column_exists");
-	return column_index_from_id(column_id) != pfc::infinite_size;
+bool ui_element_settings::column_exists(long field_id) {
+
+	return column_index_from_id(field_id) != SIZE_MAX;
 }
 
-t_size ui_element_settings::column_index_from_id(long column_id) {
-	TRACK_CALL_TEXT("ui_element_settings::column_index_from_id");
-	t_size count = m_columns.get_count();
-	for(t_size i = 0; i < count; i++) {
-		if(m_columns[i].m_id == column_id)
-			return i;
-	}
+t_size ui_element_settings::column_index_from_id(long field_id) {
 
-	return pfc::infinite_size;
+	t_size count = m_columns.get_count();
+
+	for(t_size w = 0; w < count; w++) {
+		if(m_columns[w].m_id == field_id)
+			return w;
+	}
+	return SIZE_MAX;
 }

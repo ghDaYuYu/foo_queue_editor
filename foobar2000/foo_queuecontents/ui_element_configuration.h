@@ -6,20 +6,32 @@
 
 class ui_column_settings {
 public:
-	ui_column_settings(long column_id, int column_width = 100):
-	   m_id(column_id), m_column_width(column_width) {}	
 
-	   ui_column_settings(){}
+	ui_column_settings(long column_id, int column_width = 100, t_uint32 order = ~0):
+		m_id(column_id), m_column_width(column_width), m_order(order) {
+
+	}
+
+	ui_column_settings(){}
 
 	// width of this column, should be kept updated all the time
-	int m_column_width;
 	long m_id;
+	int m_column_width;
+	t_uint32 m_order = ~0;
 };
 
 // settings for single ui leement
 class ui_element_settings {
+
 public:
-	ui_element_settings() : m_show_column_header(true), m_relative_column_widths(false), m_control_width(100), m_columns(), m_border(WS_EX_STATICEDGE) {}
+
+	ui_element_settings() : m_show_column_header(true), m_relative_column_widths(false),
+		m_control_width(100), m_columns(), m_border(WS_EX_STATICEDGE) {}
+
+	inline static int in_version;
+
+	int m_version = 5;
+
 	// Whether to show colum header
 	bool m_show_column_header;
 
@@ -40,26 +52,30 @@ public:
 
 };
 
-
-
 FB2K_STREAM_WRITER_OVERLOAD(ui_column_settings) {
 	stream << value.m_id;
 	stream << value.m_column_width;
-	
+
+	stream << value.m_order;
+
 	return stream;
 }
 
 FB2K_STREAM_READER_OVERLOAD(ui_column_settings) {
 	stream >> value.m_id;
 	stream >> value.m_column_width;
+	if (ui_element_settings::in_version >= 5) {
+		stream >> value.m_order;
+	}
 	return stream;
 }
 
+FB2K_STREAM_READER_OVERLOAD(ui_element_settings) {
 
-FB2K_STREAM_READER_OVERLOAD(ui_element_settings) {	
-	int version = -1;
-	try {				
-		stream >> version;
+	ui_element_settings::in_version = -1;
+
+	try {
+		stream >> ui_element_settings::in_version;
 
 		stream >> value.m_show_column_header;
 		stream >> value.m_relative_column_widths;
@@ -68,7 +84,7 @@ FB2K_STREAM_READER_OVERLOAD(ui_element_settings) {
 		value.m_columns.remove_all();
 		stream.read_array(value.m_columns);
 
-		if(version >= 4) {
+		if(value.m_version >= 4) {
 			DEBUG_PRINT << "Reading m_border since version >= 4";
 			stream >> value.m_border;
 		} else {
@@ -76,8 +92,16 @@ FB2K_STREAM_READER_OVERLOAD(ui_element_settings) {
 			value.m_border = WS_EX_STATICEDGE; // DUI default border
 		}
 
+		if (value.m_version < 5) {
+			uint32_t order = 0;
+			for (auto &w : value.m_columns) {
+				w.m_order = order;
+				++order;
+			}
+		}
+
 		DEBUG_PRINT << "Reading ui element settings:";
-		DEBUG_PRINT << "Config version: " << version;
+		DEBUG_PRINT << "Config version: " << value.m_version;
 		DEBUG_PRINT << "m_show_column_header: " << value.m_show_column_header;
 		DEBUG_PRINT << "m_relative_column_widths: " << value.m_relative_column_widths;
 		DEBUG_PRINT << "m_control_width: " << value.m_control_width;
@@ -88,7 +112,7 @@ FB2K_STREAM_READER_OVERLOAD(ui_element_settings) {
 		// We do not concern the user for nothing. If didn't even
 		// succeed reading the version it *probably* means
 		// we are constructing new settings
-		if(version != -1) {
+		if(value.m_version != -1) {
 			console::warning(COMPONENT_NAME_HC ": Failed to read ui element settings. Reseting settings.");
 		} else {
 			console::info(COMPONENT_DESC ": Constructing default settings for ui element.");
@@ -108,10 +132,10 @@ FB2K_STREAM_READER_OVERLOAD(ui_element_settings) {
 	return stream;
 }
 
-FB2K_STREAM_WRITER_OVERLOAD(ui_element_settings) {		
+FB2K_STREAM_WRITER_OVERLOAD(ui_element_settings) {
 	// For backwards-compatibility
 	int version = COMPONENTCONFIGVERSION;
-	stream << version;	
+	stream << version;
 
 	stream << value.m_show_column_header;
 	stream << value.m_relative_column_widths;
@@ -123,16 +147,6 @@ FB2K_STREAM_WRITER_OVERLOAD(ui_element_settings) {
 	DEBUG_PRINT << "m_relative_column_widths: " << value.m_relative_column_widths;
 	DEBUG_PRINT << "m_control_width: " << value.m_control_width;
 	DEBUG_PRINT << "m_columns (size): " << value.m_columns.get_count();
-	
-#if _DEBUG
-	t_size col_count = value.m_columns.get_count();
-	for(t_size i = 0; i < col_count; i++) {
-		auto col_setting_iter = cfg_ui_columns.find(value.m_columns[i].m_id);
-		DEBUG_PRINT << " Column #" << i << ": id:" << value.m_columns[i].m_id 
-			<< ", width:" << value.m_columns[i].m_column_width 
-			<< ", corresponding name. " << col_setting_iter->m_value.m_name;
-	}
-#endif
 
 	stream.write_array(value.m_columns);	
 	stream.write_int(value.m_border);
