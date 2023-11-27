@@ -183,7 +183,7 @@ void CMyPreferences::apply() {
 			max_id = std::max_element(data.begin(),
 			data.end(),
 			[](const auto& a, const auto& b) {
-				return a.id < b.id;
+				return (a.id < b.id) && (!(a.id == LONG_MAX || b.id == LONG_MAX));
 			})->id;
 		}
 
@@ -210,6 +210,7 @@ void CMyPreferences::apply() {
 				cfg_def.m_alignment = rec_it->alignment;
 
 				cfg_ui_columns.set(++max_id, cfg_def);
+				rec_it->id = max_id;
 
 				continue;
 			}
