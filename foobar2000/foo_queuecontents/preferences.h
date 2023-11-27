@@ -215,7 +215,12 @@ private:
 
 		m_field_list.OnItemsRemoved(mask, deleted);
 
-		return deleted;
+		if (deleted) {
+            m_columns_dirty = true;
+            OnChanged();
+        }
+
+        return deleted;
 	}
 
 	// item action

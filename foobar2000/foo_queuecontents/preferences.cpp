@@ -309,8 +309,7 @@ LRESULT CMyPreferences::OnBnClickedButtonAddColumn(WORD /*wNotifyCode*/, WORD /*
 LRESULT CMyPreferences::OnBnClickedButtonRemoveColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	if (listRemoveItems(nullptr, m_field_list.GetSelectionMask())) {
-		m_columns_dirty = true;
-		OnChanged();
+		//
 	}
 
 	return 0;
