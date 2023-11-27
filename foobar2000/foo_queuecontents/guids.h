@@ -1,7 +1,7 @@
 #pragma once
 
 // {CFD0D78C-16FF-45AE-887D-E3DC31A98947}
-static const GUID guid_queuecontents_preferences =
+static const GUID guid_preferences =
 { 0xcfd0d78c, 0x16ff, 0x45ae, { 0x88, 0x7d, 0xe3, 0xdc, 0x31, 0xa9, 0x89, 0x47 } }; //mod
 
 // {E1B4FD29-E8FE-431C-9230-F11D776A63FF}

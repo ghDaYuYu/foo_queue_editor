@@ -1,6 +1,7 @@
 #pragma once
-#include "stdafx.h"
 #include "cfg_objMapWithDefault.h"
+
+using namespace cfg_var_legacy;
 
 // definition of a column, these are referenced from ui elements
 class ui_column_definition {
@@ -12,8 +13,10 @@ public:
 
 	pfc::string8 m_name;
 	pfc::string8 m_pattern;
-	t_int m_alignment;
+	t_int m_alignment = 0;
 };
+
+typedef pfc::map_t<long, ui_column_definition>::const_iterator cfg_ui_iterator;
 
 FB2K_STREAM_WRITER_OVERLOAD(ui_column_definition);
 FB2K_STREAM_READER_OVERLOAD(ui_column_definition);
@@ -23,6 +26,9 @@ static const t_int COLUMN_ALIGNMENT_LEFT = LVCFMT_LEFT;
 static const t_int COLUMN_ALIGNMENT_CENTER = LVCFMT_CENTER;
 static const t_int COLUMN_ALIGNMENT_RIGHT = LVCFMT_RIGHT;
 
+// {5B269A4B-669D-43AA-94B2-D7691EF560E2}
+static const GUID guid_cfg_next_id =
+{ 0x5b269a4b, 0x669d, 0x43aa, { 0x94, 0xb2, 0xd7, 0x69, 0x1e, 0xf5, 0x60, 0xe2 } }; //new
 
 // {3526DFD2-C5DB-4541-96BE-B4F99FE06C07}
 static const GUID guid_cfg_playlist_enabled =
@@ -41,6 +47,7 @@ static const GUID guid_cfg_playlist_name =
 static const GUID guid_cfg_ui_columns =
 { 0xf5da3648, 0x8655, 0x43f9, { 0xbc, 0x69, 0x67, 0xc7, 0xe5, 0x6e, 0x57, 0x4d } }; //mod
 
+static const int default_cfg_next_id = 10;
 static const int default_cfg_playlist_enabled = 0;
 static const char* default_cfg_playlist_name = "Queue";
 
@@ -56,8 +63,8 @@ static t_storage_impl<long, ui_column_definition> default_cfg_ui_columns[] = {
 	t_storage_impl<long, ui_column_definition>::create(7, ui_column_definition(pfc::string8("Codec"), pfc::string8("%codec%"), COLUMN_ALIGNMENT_LEFT))
 };
 
-
-extern cfg_string cfg_playlist_name;
-extern cfg_bool cfg_playlist_enabled;
+extern cfg_var_legacy::cfg_int cfg_next_id;
+extern cfg_var_legacy::cfg_string cfg_playlist_name;
+extern cfg_var_legacy::cfg_bool cfg_playlist_enabled;
 
 extern cfg_objMapWithDefault< pfc::map_t<long, ui_column_definition> > cfg_ui_columns;
