@@ -1,12 +1,12 @@
 #pragma once
-
-#include "stdafx.h"
 #include <list>
 
 class window_manager_window {
 public:
+
 	virtual void Refresh() = 0;
-	virtual void ColumnsChanged() {}
+	virtual void GetLayout() {}
+	virtual void PrefColumnsChanged(bool reset = false) {}
 	virtual void RefreshVisuals() {}
 };
 
@@ -24,10 +24,11 @@ private:
 public:
 	static void EnableUpdates(bool enable);
 	static void AddWindow(window_manager_window* wnd);
-	static void RemoveWindow(window_manager_window* wnd);    
+	static void RemoveWindow(window_manager_window* wnd);
 	static std::list<window_manager_window*> GetWindowList();
 	static void GlobalRefresh();
-	static void UIColumnsChanged();
+	static void UIColumnsChanged(bool reset);
+	static void SaveUILayout();
 	static void VisualsChanged();
 };
 

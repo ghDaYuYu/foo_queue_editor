@@ -66,7 +66,6 @@ std::list<window_manager_window*> window_manager::GetWindowList()
 	return ret;
 }
 
-
 void window_manager::GlobalRefresh()
 {
 	TRACK_CALL_TEXT("window_manager::GlobalRefresh");
@@ -85,7 +84,19 @@ void window_manager::GlobalRefresh()
 	updates_enabled = true;
 }
 
-void window_manager::UIColumnsChanged() {
+void window_manager::SaveUILayout() {
+	TRACK_CALL_TEXT("window_manager::SaveUILayout");
+
+	std::list<window_manager_window*> windowList = GetWindowList();
+	std::list<window_manager_window*>::iterator Iter;
+
+	for (Iter = windowList.begin(); Iter != windowList.end(); Iter++)
+	{
+		(*Iter)->GetLayout();
+	}
+}
+
+void window_manager::UIColumnsChanged(bool reset) {
 	TRACK_CALL_TEXT("window_manager::UIColumnsChanged");
 	if(!updates_enabled)
 		return;
@@ -97,7 +108,7 @@ void window_manager::UIColumnsChanged() {
 
 	for (Iter = windowList.begin(); Iter != windowList.end(); Iter++)
 	{
-		(*Iter)->ColumnsChanged();
+		(*Iter)->PrefColumnsChanged(reset);
 	}
 }
 
@@ -119,17 +130,16 @@ void window_manager::VisualsChanged() {
 
 NoRefreshScope::NoRefreshScope(bool scopeEnabled /*= true*/) : bScopeEnabled(scopeEnabled) {
 	if(scopeEnabled) {
-		window_manager::EnableUpdates(false);		
+		window_manager::EnableUpdates(false);
 	}
 }
 
 NoRefreshScope::~NoRefreshScope() {
 	if(bScopeEnabled) {
-		window_manager::EnableUpdates(true);		
+		window_manager::EnableUpdates(true);
 	}
 }
 
 void NoRefreshScope::EnableScope(bool scopeEnabled /*= true*/) {
 	bScopeEnabled = scopeEnabled;
 }
-
