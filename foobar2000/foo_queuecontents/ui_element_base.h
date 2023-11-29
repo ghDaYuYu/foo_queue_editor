@@ -22,6 +22,7 @@ public:
 	virtual void GetLayout();
 	// when columns might have been changed
 	virtual void PrefColumnsChanged(bool reset = false);
+	virtual void PrefColumnsChanged(pfc::map_t<long, ui_column_definition> modded_ui_col_defs);
 	
 	// persist UI element configuration
 	virtual void set_configuration();

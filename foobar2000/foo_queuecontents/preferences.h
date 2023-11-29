@@ -1,7 +1,7 @@
 #pragma once
 #include "libPPUI\CListControlOwnerData.h"
 #include "libPPUI\CDialogResizeHelper.h"
-#include <helpers\DarkMode.h>
+#include "helpers\DarkMode.h"
 #include "helpers\atl-misc.h"
 #include "config.h"
 #include "guids.h"
@@ -28,31 +28,25 @@ struct field_t {
 };
 
 inline bool operator ==(const field_t& a, const field_t& b) {
-	return  a.id == b.id && 
-			a.name.equals(b.name) &&
-			a.pattern.equals(b.pattern) &&
-			a.alignment == b.alignment;
+	return
+		a.id == b.id && 
+		a.name.equals(b.name) &&
+		a.pattern.equals(b.pattern) &&
+		a.alignment == b.alignment;
 }
 
 std::vector<field_t>data;
 
-void init_data() {
+void init_data(const pfc::map_t<long, ui_column_definition> column_map) {
 
 	data.clear();
 
-	//todo: remove cfg_next_id
-	auto curr_max_id = cfg_next_id.get_value();
 	t_int32 next_max_id = 0;
-	auto c = cfg_ui_columns.get_count();
-	for (auto w : cfg_ui_columns) {
+	auto c = column_map.get_count();
+	for (auto w : column_map) {
 		field_t rec = { w.m_key, w.m_value.m_name, w.m_value.m_pattern, w.m_value.m_alignment };
+		PFC_ASSERT(w.m_key != LONG_MAX);
 		data.emplace_back(rec);
-		if (w.m_key > curr_max_id) {
-			next_max_id = w.m_key + 1;
-		}
-	}
-	if (next_max_id) {
-		cfg_next_id = next_max_id;
 	}
 }
 
@@ -62,8 +56,7 @@ public:
 
 	CFieldList(IListControlOwnerDataSource* h)
 		: CListControlOwnerData(h) {
-		
-		init_data();
+		init_data(cfg_ui_columns);
 	}
 
 	~CFieldList() {

@@ -141,6 +141,12 @@ void ui_element_base::PrefColumnsChanged(bool reset) {
 	InvalidateWnd();
 }
 
+void ui_element_base::PrefColumnsChanged(pfc::map_t<long, ui_column_definition> old_ui_col_defs) {
+	TRACK_CALL_TEXT("ui_element_base::ColumnsChanged");
+
+	m_guiList.ModColumns(old_ui_col_defs);
+}
+
 // list control to m_columns
 void ui_element_base::GetLayout() {
 	m_guiList.GetCurrentColumnLayout();

@@ -25,8 +25,6 @@ BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 
 	m_dark.AddDialogWithControls(m_hWnd);
 
-	m_columns_dirty = false;
-
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, cfg_playlist_name);
 
@@ -110,19 +108,21 @@ t_uint32 CMyPreferences::get_state() {
 void CMyPreferences::reset() {
 
 	CYesNoApiDialog yndlg;
-	if (!yndlg.query(m_hWnd, { "Reset", "Reset Queue Editor settings?" })) {
+	if (!yndlg.query(m_hWnd, { "Reset", "Reset Queue Editor settings?" }, false, false)) {
 		return;
 	}
 
-	//todo
-	m_columns_dirty = false;
+	CheckDlgButton(IDC_PLAYLIST_ENABLED, default_cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
+	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, default_cfg_playlist_name);
+	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(default_cfg_playlist_enabled);
 
 	size_t old_size = data.size();
-	cfg_ui_columns.remove_all(); //(1)
-	map_utils::fill_map_with_values(cfg_ui_columns, default_cfg_ui_columns);
-	init_data(); //(2)
+	pfc::map_t<long, ui_column_definition> tmp_column_map;
+	map_utils::fill_map_with_values(tmp_column_map, default_cfg_ui_columns);
 
-	//refresh data/scroll bar
+	init_data(tmp_column_map);
+
+	//update scroll bar
 	size_t new_size = data.size();
 	if (old_size > new_size) {
 		bit_array_bittable delMask(bit_array_false(), old_size);
@@ -139,17 +139,6 @@ void CMyPreferences::reset() {
 		m_field_list.ReloadItems(bit_array_true());
 	}
 
-	CheckDlgButton(IDC_PLAYLIST_ENABLED, default_cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
-	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, default_cfg_playlist_name);
-	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(default_cfg_playlist_enabled);
-	
-	pfc::map_t<long, ui_column_definition> column_list;
-	map_utils::fill_map_with_values(column_list, default_cfg_ui_columns);	
-
-	window_manager::UIColumnsChanged(true);
-	window_manager::GlobalRefresh();
-
-	m_columns_dirty = true;
 	OnChanged();
 }
 
@@ -179,6 +168,7 @@ void CMyPreferences::apply() {
 		// apply column settings
 
 		long max_id = 0;
+
 		if (data.size()) {
 			max_id = std::max_element(data.begin(),
 			data.end(),
@@ -187,10 +177,17 @@ void CMyPreferences::apply() {
 			})->id;
 		}
 
+		pfc::map_t<long, ui_column_definition> old_ui_col_defs;
+		old_ui_col_defs = cfg_ui_columns;
+
+		pfc::map_t<long, ui_column_definition>& target_defs = cfg_ui_columns;
+
 		for (auto rec_it = data.begin(); rec_it != data.end(); rec_it++) {
-			//todo: also if rec_it->id == LONG_MAX 
-			auto &iter = cfg_ui_columns.find(rec_it->id);
+
+			auto &iter = target_defs.find(rec_it->id);
+
 			if (iter.is_valid()) {
+				PFC_ASSERT(iter->m_key != LONG_MAX);
 				//update
 				if (!(iter->m_value.m_name.equals(rec_it->name) &&
 					iter->m_value.m_pattern.equals(rec_it->pattern) &&
@@ -209,32 +206,35 @@ void CMyPreferences::apply() {
 				cfg_def.m_pattern = rec_it->pattern;
 				cfg_def.m_alignment = rec_it->alignment;
 
-				cfg_ui_columns.set(++max_id, cfg_def);
+				if (rec_it == data.begin()) {
+					max_id = 0;
+					target_defs.set(max_id, cfg_def);
+				}
+				else {
+					target_defs.set(++max_id, cfg_def);
+				}
+				PFC_ASSERT(max_id != LONG_MAX);
 				rec_it->id = max_id;
-
 				continue;
 			}
 		}
 
-		//del key/button...
 		for (auto d : m_user_removals) {
-			if (d != LONG_MAX) {
-				auto& iter = cfg_ui_columns.find(d);
-				if (iter.is_valid()) {
-					cfg_ui_columns.remove(iter);
-				}
+
+			auto& iter = target_defs.find(d);
+			if (iter.is_valid()) {
+				target_defs.remove(iter);
 			}
 		}
-		
+
 		m_user_removals.clear();
 
 		window_manager::SaveUILayout();
-		window_manager::UIColumnsChanged(false);
-		window_manager::GlobalRefresh();
+		window_manager::UIColumnsChanged(old_ui_col_defs);
+		//window_manager::GlobalRefresh();
 	}
 
 	cfg_playlist_name = playlist_name;
-	m_columns_dirty = false;
 
 	OnChanged();
 }
@@ -252,23 +252,24 @@ bool CMyPreferences::HasChanged() {
 	bool playlist_enabled_cfg = cfg_playlist_enabled != 0;
 
 	playlist_name = uGetDlgItemText(m_hWnd, IDC_PLAYLIST_NAME);
-	
-	bool bfields_changed = data.size() != cfg_ui_columns.get_count();
 
 	m_columns_dirty = cfg_ui_columns.get_count() != data.size();
 
 	if (!m_columns_dirty) {
 
-		int c = 0;
-		for (auto w : cfg_ui_columns) {
+		for (auto w : data) {
 
-			field_t rec = { w.m_key, w.m_value.m_name, w.m_value.m_pattern, w.m_value.m_alignment };
-			auto dbg = data.at(c);
-			if (!(rec == data.at(c))) {
-				m_columns_dirty = true;
-				break;
+			auto cf = cfg_ui_columns.find(w.id);
+			if (!cf.is_valid()) {
 			}
-			c++;
+			else {
+				field_t rec = { cf->m_key, cf->m_value.m_name, cf->m_value.m_pattern, cf->m_value.m_alignment };
+
+				if (!(rec == w)) {
+					m_columns_dirty = true;
+					break;
+				}
+			}
 		}
 	}
 
@@ -294,22 +295,14 @@ LRESULT CMyPreferences::OnBnClickedPlaylistEnabled(WORD /*wNotifyCode*/, WORD /*
 
 LRESULT CMyPreferences::OnBnClickedButtonAddColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	field_t new_rec{ LONG_MAX, "new field", "", 0};
-
-	data.emplace_back(new_rec);
-	m_field_list.ReloadItem(data.size() - 1);
-	m_field_list.OnItemsInserted(data.size() - 1, 1, true);
-
-
-	m_columns_dirty = true;
-	OnChanged();
+	add_new_item();
 	return 0;
 }
 
 LRESULT CMyPreferences::OnBnClickedButtonRemoveColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	if (listRemoveItems(nullptr, m_field_list.GetSelectionMask())) {
-		//
+		//OnChanged() by listRemoveItems
 	}
 
 	return 0;

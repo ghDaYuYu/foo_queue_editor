@@ -112,6 +112,21 @@ void window_manager::UIColumnsChanged(bool reset) {
 	}
 }
 
+void window_manager::UIColumnsChanged(pfc::map_t<long, ui_column_definition> old_ui_col_defs) {
+	TRACK_CALL_TEXT("window_manager::UIColumnsChanged");
+
+	if (!updates_enabled)
+		return;
+
+	std::list<window_manager_window*> windowList = GetWindowList();
+	std::list<window_manager_window*>::iterator Iter;
+
+	for (Iter = windowList.begin(); Iter != windowList.end(); Iter++)
+	{
+		(*Iter)->PrefColumnsChanged(old_ui_col_defs);
+	}
+}
+
 void window_manager::VisualsChanged() {
 	TRACK_CALL_TEXT("window_manager::VisualsChanged");
 	if(!updates_enabled)

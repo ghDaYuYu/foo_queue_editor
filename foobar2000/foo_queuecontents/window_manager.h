@@ -1,5 +1,6 @@
 #pragma once
 #include <list>
+#include "config.h"
 
 class window_manager_window {
 public:
@@ -7,6 +8,7 @@ public:
 	virtual void Refresh() = 0;
 	virtual void GetLayout() {}
 	virtual void PrefColumnsChanged(bool reset = false) {}
+	virtual void PrefColumnsChanged(pfc::map_t<long, ui_column_definition> old_ui_col_defs) {}
 	virtual void RefreshVisuals() {}
 };
 
@@ -28,6 +30,7 @@ public:
 	static std::list<window_manager_window*> GetWindowList();
 	static void GlobalRefresh();
 	static void UIColumnsChanged(bool reset);
+	static void UIColumnsChanged(pfc::map_t<long, ui_column_definition> modded_ui_col_defs);
 	static void SaveUILayout();
 	static void VisualsChanged();
 };
