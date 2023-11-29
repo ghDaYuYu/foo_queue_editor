@@ -13,8 +13,7 @@
 
 #include "queue_list_control_ILO.h"
 
-//todo: auto-resize columns
-#define AUTO_FLAG INT32_MAX + 1
+#define AUTO_FLAG UINT32_MAX
 
 namespace dlg {
 
@@ -233,19 +232,14 @@ namespace dlg {
 					continue;
 				}
 
-				//auto db = GetColumnOrderArray();
-				//auto dbstr = column_settings->m_value.m_name;
-				
 				AddColumn(column_settings->m_value.m_name, MulDiv(static_cast<int>(400), DPI.cx, 96), column_settings->m_value.m_alignment, true);
-				
+			
 				if (settings->m_relative_column_widths) {
-					//todo: auto-size
+
 					ResizeColumn(i, AUTO_FLAG);
 				}
-				
-				//db = GetColumnOrderArray();
-				//get order
-
+			
+				//order
 				t_uint32 tmp_order = settings->m_columns[i].m_order;
 				if (tmp_order == ~0 || tmp_order >= columnCount) {
 					order_fault = true;
@@ -282,20 +276,25 @@ namespace dlg {
 			ui_element_settings* settings;
 			m_ui_host->get_configuration(&settings);
 
+			GetCurrentColumnLayout();
+
 			// update current columns
 			auto new_ndx = settings->m_columns.get_count();
 			settings->m_columns.add_item(ui_column_settings(field_id));
 			settings->m_columns[new_ndx].m_order = new_ndx;
+			// mixed auto-resize
+			settings->m_columns[new_ndx].m_autoWidth = settings->m_relative_column_widths;
 
 			// add list control column
 			cfg_ui_iterator column_settings = cfg_ui_columns.find(field_id);
 			auto DPI = GetDPI();
-
-			AddColumn(column_settings->m_value.m_name, MulDiv(static_cast<int>(70), DPI.cx, 96), column_settings->m_value.m_alignment, false);
-
+		
+			AddColumn(column_settings->m_value.m_name, MulDiv(static_cast<int>(70), DPI.cx, 96), column_settings->m_value.m_alignment, true);
+		
 			if (settings->m_relative_column_widths) {
-				//todo: auto-size
+				
 				ResizeColumn(new_ndx, AUTO_FLAG);
+
 			}
 			
 			m_order = GetColumnOrderArray();
@@ -331,6 +330,7 @@ namespace dlg {
 
 			//note: vldata[n].cols[ndx] still holding value
 			DeleteColumn(col_ndx, true);
+			GetCurrentColumnLayout();
 
 			m_ui_host->save_configuration();
 
@@ -349,9 +349,10 @@ namespace dlg {
 			for (auto w = 0; w < GetColumnCount(); w++) {
 
 				//width and order
-
 				auto width = GetColumnWidthF(w);
-				settings->m_columns[w].m_column_width = width;
+				if (!settings->m_columns[w].m_autoWidth) {
+					settings->m_columns[w].m_column_width = width;
+				endif
 				settings->m_columns[w].m_order = order[w];
 			}
 
@@ -438,13 +439,13 @@ namespace dlg {
 				GetClientRect(&rc);
 
 				int column_nominal_width = settings->m_columns[i].m_column_width;
-				int column_width = column_nominal_width;
+				bool autoWidth = settings->m_columns[i].m_autoWidth;
+				int column_width = autoWidth ? AUTO_FLAG : column_nominal_width;
 
 				if (relative_column_sizes && settings->m_control_width > 0) {
 					column_width = (int)(((double)column_width / (double)settings->m_control_width) * (double)rc.Width());
 				}
 
-				//todo: auto-size
 				ResizeColumn(i, column_width);
 			}
 		}

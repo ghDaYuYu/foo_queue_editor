@@ -438,22 +438,23 @@ namespace dlg {
 
 			settings->m_relative_column_widths = !settings->m_relative_column_widths;
 
+			// refresh layout...
 			for (int i = 0; i < GetColumnCount(); i++) {
 				if (settings->m_relative_column_widths) {
-					ResizeColumn(i, AUTO_FLAG);
+
+					//todo: can not refresh while adding a mixed auto-sized field
+					//      use cfg_ui_column in prop panel instead? 
+
+					ResizeColumn(i, AUTO_FLAG, false);
 				}
 				else {
-					ResizeColumn(i, GetColumnWidthF(i));
+					RelayoutUIColumns();
+					GetCurrentColumnLayout();
+					SendMessage(WM_SIZE, 0, MAKELPARAM(-1, -1));
+					break;
 				}
 			}
 
-			// Whether we are enabling or disabling auto-sizing of columns we still
-			// need to save current widths and use them for RelayoutUIColumns
-			GetCurrentColumnLayout();
-			// Update column sizes to settings etc.
-			if (!settings->m_relative_column_widths) {
-				RelayoutUIColumns();
-			}
 			// Save configuration
 
 			m_ui_host->save_configuration();

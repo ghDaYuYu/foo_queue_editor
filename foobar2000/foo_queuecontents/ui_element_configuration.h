@@ -8,7 +8,7 @@ class ui_column_settings {
 public:
 
 	ui_column_settings(long column_id, int column_width = 100, t_uint32 order = ~0):
-		m_id(column_id), m_column_width(column_width), m_order(order) {
+		m_id(column_id), m_column_width(column_width), m_order(order), m_autoWidth(false) {
 
 	}
 
@@ -18,6 +18,7 @@ public:
 	long m_id;
 	int m_column_width;
 	t_uint32 m_order = ~0;
+	bool m_autoWidth = false;
 };
 
 // settings for single ui leement
@@ -55,9 +56,8 @@ public:
 FB2K_STREAM_WRITER_OVERLOAD(ui_column_settings) {
 	stream << value.m_id;
 	stream << value.m_column_width;
-
 	stream << value.m_order;
-
+	stream << value.m_autoWidth;
 	return stream;
 }
 
@@ -66,6 +66,9 @@ FB2K_STREAM_READER_OVERLOAD(ui_column_settings) {
 	stream >> value.m_column_width;
 	if (ui_element_settings::in_version >= 5) {
 		stream >> value.m_order;
+		if (ui_element_settings::in_version >= 6) {
+			stream >> value.m_autoWidth;
+		}
 	}
 	return stream;
 }
