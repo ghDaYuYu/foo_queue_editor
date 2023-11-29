@@ -137,6 +137,8 @@ void ui_element_base::PrefColumnsChanged(bool reset) {
 
 	//todo: rev params
 	m_guiList.BuildColumns(!reset, reset);
+	m_guiList.QueueReset();
+	m_guiList.QueueRefresh();
 	m_guiList.GetHeaderCtrl().Invalidate();
 	InvalidateWnd();
 }

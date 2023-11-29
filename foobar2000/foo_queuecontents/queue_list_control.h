@@ -115,6 +115,7 @@ namespace dlg {
 		void SetSelectedIndices(const pfc::list_base_const_t<t_size>& p_in);
 
 		void QueueRefresh();
+		void QueueReset() { my_queue.remove_all(); }
 
 		void SetCallback(ui_element_instance_callback_ptr p_callback) { m_callback = p_callback; }
 
@@ -144,6 +145,61 @@ namespace dlg {
 		void EditModeContextMenuGetFocusPoint(CPoint& pt);
 
 		void OnContextMenu(CWindow wnd, CPoint point);
+
+		void ModColumns(pfc::map_t<long, ui_column_definition> old_ui_col_defs) {
+			ui_element_settings* settings;
+			m_ui_host->get_configuration(&settings);
+
+			bool need_header_rebuilt = false;
+			bool need_header_refresh = false;
+			bool need_data_requery = false;
+
+			for (auto w : settings->m_columns) {
+
+				if (need_header_rebuilt && need_data_requery && need_header_refresh) {
+					break;
+				}
+
+				auto was_cf = old_ui_col_defs.find(w.m_id);
+				auto is_cf = cfg_ui_columns.find(w.m_id);
+				if (was_cf.is_valid()) {
+					// was using it
+					if (is_cf.is_valid()) {
+						//still exists
+						if (!(was_cf->m_value.m_name.equals(is_cf->m_value.m_name) &&
+							was_cf->m_value.m_alignment == is_cf->m_value.m_alignment)) {
+							//header or aligment is different
+							need_header_refresh = true;
+						}
+						//requery?
+						need_data_requery = !was_cf->m_value.m_pattern.equals(is_cf->m_value.m_pattern);
+					}
+					else {
+						//field no longer available
+						need_header_rebuilt = true;
+					}
+				}
+				else {
+					//ui not using this field_id
+				}
+			}
+
+			if (need_data_requery) {
+				QueueReset();
+				QueueRefresh();
+			}
+			else {
+				if (need_header_rebuilt) {
+					BuildColumns(true, false);
+					QueueReset();
+					QueueRefresh();
+				}
+				else if (need_header_refresh) {
+					UpdateHeaderNameAlign();
+				}
+			}
+
+		}
 
 		void BuildColumns(bool restore, bool defaults = false) {
 
@@ -341,6 +397,19 @@ namespace dlg {
 				}
 				else {
 					//..
+				}
+			}
+		}
+
+		void UpdateHeaderNameAlign() {
+			ui_element_settings* settings;
+			m_ui_host->get_configuration(&settings);
+
+			for (t_size i = 0; i < settings->m_columns.get_count(); i++) {
+				
+				auto cf = cfg_ui_columns.find(settings->m_columns[i].m_id);
+				if (cf.is_valid()) {
+					SetColumn(i, cf->m_value.m_name, cf->m_value.m_alignment, true);
 				}
 			}
 		}

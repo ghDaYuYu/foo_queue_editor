@@ -10,6 +10,17 @@ CMyPreferences::~CMyPreferences() {
 	m_static_header.Detach();
 }
 
+void CMyPreferences::init_syntax_link() {
+	COLORREF lnktx = m_dark.IsDark() ? GetSysColor(/*COLOR_BTNHIGHLIGHT*/COLOR_MENUHILIGHT) : (COLORREF)(-1);
+	m_lnk_syntax_help.m_clrLink = lnktx;
+	m_lnk_syntax_help.m_clrVisited = lnktx;
+	pfc::stringcvt::string_wide_from_utf8 wtext(TITLEFORMAT_WIKIPAGEURL);
+	m_lnk_syntax_help.SetHyperLink((LPCTSTR)const_cast<wchar_t*>(wtext.get_ptr()));
+	m_lnk_syntax_help.SetLabel(_T("Syntax help"));
+	CRect rc; ::GetWindowRect(m_lnk_syntax_help, &rc);
+	m_lnk_syntax_help.RedrawWindow(0, 0, RDW_INVALIDATE);
+}
+
 BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 
 	HWND wndStHeader = uGetDlgItem(IDC_STATIC_HEADER);
@@ -28,15 +39,23 @@ BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, cfg_playlist_name);
 
-	//todo
-	const pfc::string8 tt_obs = "Note:\r\n%queue_index%, %queue_total%, " \
-		"%list_index% and %list_total% work here. Use %playlist_name% for the playlist of the queued item.";
-	uSetDlgItemText(m_hWnd, IDC_TT_OBS, tt_obs);
+	//help hyperlink
+	uSetDlgItemText(m_hWnd, IDC_TT_OBS, TT_INFO_TEXT);
+	m_lnk_syntax_help.SubclassWindow(GetDlgItem(IDC_STATIC_HELP_SYNTAX));
+	init_syntax_link();
 
 	// Enable/Disable playlist name control
 	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(cfg_playlist_enabled);
 
 	return TRUE;
+}
+
+void AddAlignMenuItems(CMenu* menu, bool single_sel, size_t curr_alignment) {
+
+	menu->AppendMenu(MF_STRING | (single_sel && curr_alignment == HDF_LEFT ? MF_CHECKED : 0), (UINT_PTR)HDF_LEFT + 1, TEXT(ALIGNMENT_LEFT"\tL"));
+	menu->AppendMenu(MF_STRING | (single_sel && curr_alignment == HDF_CENTER ? MF_CHECKED : 0), (UINT_PTR)HDF_CENTER + 1, TEXT(ALIGNMENT_CENTER"\tC"));
+	menu->AppendMenu(MF_STRING | (single_sel && curr_alignment == HDF_RIGHT ? MF_CHECKED : 0), (UINT_PTR)HDF_RIGHT + 1, TEXT(ALIGNMENT_RIGHT"\tR"));
+
 }
 
 void CMyPreferences::OnContextMenu(CWindow wnd, CPoint point) {
@@ -45,32 +64,31 @@ void CMyPreferences::OnContextMenu(CWindow wnd, CPoint point) {
 
 		pfc::bit_array_bittable selmask = m_field_list.GetSelectionMask();
 
-		size_t curr_alignment = SIZE_MAX;
-
 		size_t csel = m_field_list.GetSelectedCount();
 		size_t isel = selmask.find_first(true, 0, data.size());
 
 		bool bsingle_sel = (csel == 1);
 
-		if (bsingle_sel) {
-			const field_t* entry = &data.at(isel);
-			alignment = entry->alignment;
-		}
-		else {
-			return;
-		}
+		size_t curr_alignment = SIZE_MAX;
+		if (bsingle_sel) curr_alignment = data.at(isel).alignment;
+
+		enum {
+			ID_ADD = 10,
+			ID_DELETE,
+		};
 
 		CMenu menu;
 		WIN32_OP(menu.CreatePopupMenu());
-		menu.AppendMenu(MF_STRING | (bsingle_sel && alignment == HDF_LEFT ? MF_CHECKED : 0), (UINT_PTR)HDF_LEFT + 1, TEXT(ALIGNMENT_LEFT"\tL"));
-		menu.AppendMenu(MF_STRING | (bsingle_sel && alignment == HDF_CENTER ? MF_CHECKED : 0), (UINT_PTR)HDF_CENTER +1 , TEXT(ALIGNMENT_CENTER"\tC"));
-		menu.AppendMenu(MF_STRING | (bsingle_sel && alignment == HDF_RIGHT ? MF_CHECKED : 0), (UINT_PTR)HDF_RIGHT + 1, TEXT(ALIGNMENT_RIGHT"\tR"));
+
+		menu.AppendMenu(MF_STRING,ID_ADD + 1, TEXT("Add new field"));
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_STRING | (!csel ? MF_GRAYED | MF_DISABLED : (bsingle_sel && curr_alignment == HDF_LEFT ? MF_CHECKED : 0)), (UINT_PTR)HDF_LEFT + 1, TEXT(ALIGNMENT_LEFT"\tL"));
+		menu.AppendMenu(MF_STRING | (!csel ? MF_GRAYED | MF_DISABLED : (bsingle_sel && curr_alignment == HDF_CENTER ? MF_CHECKED : 0)), (UINT_PTR)HDF_CENTER + 1, TEXT(ALIGNMENT_CENTER"\tC"));
+		menu.AppendMenu(MF_STRING | (!csel ? MF_GRAYED | MF_DISABLED : (bsingle_sel && curr_alignment == HDF_RIGHT ? MF_CHECKED : 0)), (UINT_PTR)HDF_RIGHT + 1, TEXT(ALIGNMENT_RIGHT"\tR"));
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_STRING | (!csel ? MF_GRAYED | MF_DISABLED : 0), ID_DELETE + 1, TEXT("Remove"));
 
 		CMenuDescriptionMap receiver(*this);
-		//todo
-		receiver.Set(HDF_LEFT, "");
-		receiver.Set(HDF_CENTER, "");
-		receiver.Set(HDF_RIGHT, "");
 
 		int cmd = menu.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, point.x, point.y, receiver);
 
@@ -78,13 +96,53 @@ void CMyPreferences::OnContextMenu(CWindow wnd, CPoint point) {
 
 			--cmd;
 
-			//todo
-			listSetEditField(nullptr, isel, /*aligment subitem*/2, std::to_string(cmd).c_str());
-			m_field_list.ReloadItem(isel);
+			switch (cmd) {
+			case HDF_LEFT:
+			case HDF_RIGHT:
+			[[walkthrought]]
+			case HDF_CENTER: {
+			[[walkthrought]]
+
+				size_t n = selmask.find_first(true, 0, selmask.size());
+				for (n; n < selmask.size(); n = selmask.find_next(true, n, selmask.size())) {
+					data.at(n).alignment = cmd;
+				}
+
+				m_field_list.ReloadItems(selmask);
+				OnChanged();
+				break;
+			}
+			case ID_DELETE: 
+				listRemoveItems(nullptr, selmask);
+				break;
+			case ID_ADD:
+				add_new_item();
+				break;
+			default:
+				;
+			}
 		}
 	}
 
+	//todo: Invalidate/Check changes
+
 	return;
+}
+
+size_t CMyPreferences::ShowAlignContextMenu(size_t item, CPoint point) {
+
+	auto isel = m_field_list.GetSingleSel();
+	const field_t* entry = &data.at(isel);
+	size_t curr_alignment = entry->alignment;
+
+	CMenu menu;
+	WIN32_OP(menu.CreatePopupMenu());
+	menu.AppendMenu(MF_STRING | (curr_alignment == HDF_LEFT ? MF_CHECKED : 0), (UINT_PTR)HDF_LEFT + 1, TEXT(ALIGNMENT_LEFT"\tL"));
+	menu.AppendMenu(MF_STRING | (curr_alignment == HDF_CENTER ? MF_CHECKED : 0), (UINT_PTR)HDF_CENTER + 1, TEXT(ALIGNMENT_CENTER"\tC"));
+	menu.AppendMenu(MF_STRING | (curr_alignment == HDF_RIGHT ? MF_CHECKED : 0), (UINT_PTR)HDF_RIGHT + 1, TEXT(ALIGNMENT_RIGHT"\tR"));
+
+	CMenuDescriptionMap receiver(*this);
+	return menu.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, point.x, point.y, receiver);
 }
 
 void CMyPreferences::UpdateColumnDefinitionsFromCfg(const pfc::map_t<long, ui_column_definition>& config /*= cfg_ui_columns*/) {

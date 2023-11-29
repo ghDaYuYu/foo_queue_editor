@@ -1,4 +1,5 @@
 #pragma once
+#include "atlctrlx.h"
 #include "libPPUI\CListControlOwnerData.h"
 #include "libPPUI\CDialogResizeHelper.h"
 #include "helpers\DarkMode.h"
@@ -19,6 +20,10 @@
 #define ALIGNMENT_LEFT "Left"
 #define ALIGNMENT_CENTER "Center"
 #define ALIGNMENT_RIGHT "Right"
+
+#define TT_INFO_TEXT "%queue_index%, %queue_total%, " \
+					"%list_index% and %list_total% work here.\r\n\r\n" \
+					"Use %playlist_name% for the playlist of the queued item."
 
 struct field_t {
 	long id = 0;
@@ -80,8 +85,6 @@ private:
 const CDialogResizeHelper::Param rz_params[] = {
 	{IDC_STATIC_HEADER, 0,0,1,0},
 	{IDC_BUTTON_ADD_COLUMN, 1,0,1,0},
-	{IDC_BUTTON_REMOVE_COLUMN, 1,0,1,0},
-	{IDC_BUTTON_SYNTAX_HELP, 1,0,1,0},
 	{IDC_FIELD_LIST, 0,0,1,0},
 	{IDC_TT_OBS, 0,0,1,0},
 	{IDC_STATIC_PL_OBS, 0,0,1,0},
@@ -114,16 +117,12 @@ public:
 		COMMAND_HANDLER_EX(IDC_PLAYLIST_NAME, EN_CHANGE, OnEditChange)
 		COMMAND_HANDLER(IDC_PLAYLIST_ENABLED, BN_CLICKED, OnBnClickedPlaylistEnabled)
 		COMMAND_HANDLER(IDC_BUTTON_ADD_COLUMN, BN_CLICKED, OnBnClickedButtonAddColumn)
-		COMMAND_HANDLER(IDC_BUTTON_REMOVE_COLUMN, BN_CLICKED, OnBnClickedButtonRemoveColumn)
-		COMMAND_HANDLER(IDC_BUTTON_SYNTAX_HELP, BN_CLICKED, OnBnClickedButtonSyntaxHelp)
 		REFLECT_NOTIFICATIONS()
 	END_MSG_MAP()
 
 public:
 	LRESULT OnBnClickedPlaylistEnabled(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedButtonAddColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnBnClickedButtonRemoveColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnBnClickedButtonSyntaxHelp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
 
@@ -189,6 +188,7 @@ private:
 	bool listRemoveItems(ctx_t ctx, pfc::bit_array const& mask) override {
 
 		size_t deleted = 0;
+		size_t oldCount = data.size();
 		auto n = mask.find_first(true, 0, data.size());
 
 		data.erase(
@@ -206,14 +206,15 @@ private:
 			std::end(data)
 		);
 
-		m_field_list.OnItemsRemoved(mask, deleted);
+		m_field_list.OnItemsRemoved(mask, oldCount);
+
+		listSelChanged(nullptr);
 
 		if (deleted) {
-            m_columns_dirty = true;
-            OnChanged();
-        }
+			OnChanged();
+		}
 
-        return deleted;
+		return deleted;
 	}
 
 	// item action
@@ -232,8 +233,16 @@ private:
 		if (subItem == 2) {
 			CPoint p;
 			::GetCursorPos(&p);
-			LPARAM lparam = MAKELPARAM(p.x, p.y);
-			OnContextMenu((HWND)m_field_list, p);
+
+			if (size_t res = ShowAlignContextMenu(item, p)) {
+				--res;
+				if (res != data.at(item).alignment) {
+					data.at(item).alignment = res;
+					m_field_list.ReloadItem(item);
+					OnChanged();
+				}
+			}
+			
 		}
 	}
 
@@ -242,28 +251,6 @@ private:
 	void listSetEditField(ctx_t ctx, size_t item, size_t subItem, const char* val) override {
 
 		field_t& data_rec = data.at(item);
-		long datalong = data_rec.id;
-		
-		//ui_column_definition& dbg_ndx = cfg_ui_columns[datalong];
-
-		t_size column_count = cfg_ui_columns.get_count();
-		pfc::array_staticsize_t<long> m_header_ctx_menu_field_ids = pfc::array_staticsize_t<long>(column_count);
-		
-		long field_id = LONG_MAX;
-		cfg_ui_iterator iter;
-
-		int i = 0;
-		for (cfg_ui_iterator iter = cfg_ui_columns.first(); iter.is_valid(); iter++) {
-
-			m_header_ctx_menu_field_ids[i] = iter->m_key;
-			if (i == datalong) {
-				field_id = iter->m_key;
-				break;
-			}
-			i++;
-		}
-
-		//note: still LONG_MAX field_id in new entries 
 
 		if (subItem == 0) {
 			data_rec.name = val;
@@ -275,6 +262,8 @@ private:
 			data_rec.alignment = atoi(val);
 		}
 
+		m_field_list.ReloadItem(item);
+
 		OnChanged();
 	}
 
@@ -284,15 +273,26 @@ private:
 		return !subItem || subItem == 1;
 	}
 
-	// focus
-
-	void listFocusChanged(ctx_t) {
-		//..
-	}
-
 	//..end IListControlOwnerDataSource
 
 	void OnContextMenu(CWindow wnd, CPoint point);
+
+	size_t ShowAlignContextMenu(size_t item, CPoint point);
+
+	void add_new_item() {
+		field_t new_rec{ LONG_MAX, "new field", "", 0 };
+		size_t ins_pos = data.size();
+		data.emplace_back(new_rec);
+		m_field_list.SelectNone();
+		m_field_list.ReloadItem(data.size() - 1);
+		m_field_list.OnItemsInserted(ins_pos, 1, true);
+
+		listSelChanged(nullptr);
+
+		OnChanged();
+	}
+
+	void init_syntax_link();
 
 protected:
 
@@ -307,6 +307,7 @@ private:
 
 	fb2k::CDarkModeHooks m_dark;
 	HeaderStatic m_static_header;
+	CHyperLink m_lnk_syntax_help;
 	CDialogResizeHelper m_resize_helper;
 };
 
