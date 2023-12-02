@@ -15,6 +15,7 @@ private:
 	void addToWatchList(t_playback_queue_item);
 
 	void globalRefresh();
+	void SaveUILayout() {}
 
 	void on_items_added(t_size p_playlist,t_size p_start, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection);
 	void on_items_reordered(t_size p_playlist,const t_size * p_order,t_size p_count);

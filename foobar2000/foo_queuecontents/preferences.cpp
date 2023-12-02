@@ -11,7 +11,7 @@ CMyPreferences::~CMyPreferences() {
 }
 
 void CMyPreferences::init_syntax_link() {
-	COLORREF lnktx = m_dark.IsDark() ? GetSysColor(/*COLOR_BTNHIGHLIGHT*/COLOR_MENUHILIGHT) : (COLORREF)(-1);
+	COLORREF lnktx = GetSysColor(COLOR_MENUHILIGHT);
 	m_lnk_syntax_help.m_clrLink = lnktx;
 	m_lnk_syntax_help.m_clrVisited = lnktx;
 	pfc::stringcvt::string_wide_from_utf8 wtext(TITLEFORMAT_WIKIPAGEURL);
@@ -36,10 +36,13 @@ BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 
 	m_dark.AddDialogWithControls(m_hWnd);
 
+	m_disable_on_change = true;
+
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, cfg_playlist_name);
 
-	//help hyperlink
+	m_disable_on_change = false;
+
 	uSetDlgItemText(m_hWnd, IDC_TT_OBS, TT_INFO_TEXT);
 	m_lnk_syntax_help.SubclassWindow(GetDlgItem(IDC_STATIC_HELP_SYNTAX));
 	init_syntax_link();
@@ -150,6 +153,11 @@ void CMyPreferences::UpdateColumnDefinitionsFromCfg(const pfc::map_t<long, ui_co
 }
 
 void CMyPreferences::OnEditChange(UINT, int, CWindow) {
+
+	if (m_disable_on_change) {
+		return;
+	}
+
 	bool playlist_enabled = (IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED);
 	// Enable/Disable playlist name control
 	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(playlist_enabled);
@@ -170,9 +178,13 @@ void CMyPreferences::reset() {
 		return;
 	}
 
+	m_disable_on_change = true;
+
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, default_cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, default_cfg_playlist_name);
 	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(default_cfg_playlist_enabled);
+
+	m_disable_on_change = false;
 
 	size_t old_size = data.size();
 	pfc::map_t<long, ui_column_definition> tmp_column_map;
@@ -287,6 +299,17 @@ void CMyPreferences::apply() {
 
 		m_user_removals.clear();
 
+		if (target_defs.get_count() != data.size()) {
+			for (auto wt : target_defs) {
+				auto found_it = std::find_if(data.begin(), data.end(), [=](const field_t rec) {
+					return rec.id == wt.m_key;
+					});
+				if (found_it == data.end()) {
+					target_defs.remove(wt.m_key);
+				}
+			}
+		}
+
 		window_manager::SaveUILayout();
 		window_manager::UIColumnsChanged(old_ui_col_defs);
 		//window_manager::GlobalRefresh();
@@ -357,21 +380,5 @@ LRESULT CMyPreferences::OnBnClickedButtonAddColumn(WORD /*wNotifyCode*/, WORD /*
 	return 0;
 }
 
-LRESULT CMyPreferences::OnBnClickedButtonRemoveColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-	if (listRemoveItems(nullptr, m_field_list.GetSelectionMask())) {
-		//OnChanged() by listRemoveItems
-	}
-
-	return 0;
-}
-
-LRESULT CMyPreferences::OnBnClickedButtonSyntaxHelp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-	ShellExecute(NULL, _T("open"), _T(TITLEFORMAT_WIKIPAGEURL),
-			NULL, NULL, SW_SHOWNORMAL);
-	
-	return 0;
-}
 
 static preferences_page_factory_t<preferences_page_myimpl> g_preferences_page_myimpl_factory;

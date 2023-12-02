@@ -30,10 +30,13 @@ void dui_element::edit_mode_context_menu_command(const POINT & p_point,bool p_fr
 
 bool dui_element::edit_mode_context_menu_get_focus_point(POINT & p_point) {	
 	TRACK_CALL_TEXT("dui_element::edit_mode_context_menu_get_focus_point");
-	CPoint pt(p_point);
 
-	m_guiList.EditModeContextMenuGetFocusPoint(pt);
-	p_point = pt;
+	p_point = m_guiList.GetContextMenuPoint(p_point);
+	CPoint ptInvalid(-1, -1);
+	if (CPoint(p_point) == ptInvalid) {
+		//no items in list
+		::GetCursorPos(&p_point);
+	}
 	return true;
 }
 

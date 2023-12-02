@@ -56,7 +56,7 @@ class queuecontents_uie_fonts_client : public columns_ui::fonts::client  {
 		out.set_string(COMPONENT_NAME_HC);
 	}
 	
-	virtual const GUID & get_client_guid() const	{
+	virtual const GUID & get_client_guid() const {
 		return uie_font_client_guid;
 	}
 

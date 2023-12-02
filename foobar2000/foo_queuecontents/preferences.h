@@ -303,7 +303,8 @@ private:
 	const preferences_page_callback::ptr m_callback;
 
 	CFieldList m_field_list;
-	bool m_columns_dirty;
+	bool m_columns_dirty = false;
+	bool m_disable_on_change = false;
 
 	fb2k::CDarkModeHooks m_dark;
 	HeaderStatic m_static_header;

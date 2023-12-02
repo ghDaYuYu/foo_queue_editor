@@ -117,6 +117,12 @@ namespace dlg {
 
 		plc->SetLastDDMark();
 
+		ActivePlaylistInformation drop_notify_playlist_state;
+		if (GetActivePlaylistState(drop_notify_playlist_state)) {
+			//..
+		}
+		plc->SetDropNofifyPlaylistStated(std::move(drop_notify_playlist_state));
+
 		auto notify = fb2k::service_new< process_locations_notify_lambda >();
 		notify->f = plc->m_drop_notify_async_fx;
 

@@ -17,6 +17,27 @@
 
 namespace dlg {
 
+	//todo: clean up
+	//contains information about the state of the active playlist at the time of drop
+	struct ActivePlaylistInformation {
+		// pfc::infinite_size if the drop is the drop is not coming from active playlist
+		GUID src = pfc::guid_null;
+		t_size active_playlist_index = SIZE_MAX;
+		t_size active_playlist_item_count = 0;
+		pfc::bit_array_bittable active_playlist_selection_mask;
+		pfc::list_t<metadb_handle_ptr> active_playlist_selected_items;
+		pfc::list_t<metadb_handle_ptr> active_playlist_all_items;
+
+		void Reset() {
+			src = pfc::guid_null;
+			active_playlist_index = SIZE_MAX;
+			active_playlist_item_count = 0;
+			active_playlist_selection_mask.resize(0);
+			active_playlist_selected_items.remove_all();
+			active_playlist_all_items.remove_all();
+		}
+	};
+
 	typedef CListControlFb2kColors <CListControlOwnerData> CListControlOwnerColors;
 
 	class CListControlQueue : public CListControlOwnerColors {
@@ -63,8 +84,141 @@ namespace dlg {
 			m_lastDDMark = SIZE_MAX;
 		}
 
+		void SetDropNofifyPlaylistStated(ActivePlaylistInformation drop_notify_playlist_state) {
+			m_drop_notify_playlist_state = drop_notify_playlist_state;
+		}
+
+		ActivePlaylistInformation m_drop_notify_playlist_state = {};
+
+		// drop notify async fx
+
 		process_locations_notify::func_t m_drop_notify_async_fx = [&](metadb_handle_list_cref op) {
+
 			m_mhl_dropped = op;
+
+			//pos playlist, pair playlist_ndx, playlist_items_count
+			std::vector <std::pair<size_t, std::pair<size_t, size_t>>> vmixed_locs;
+
+			vmixed_locs.resize(op.get_count());
+
+			bool from_playlist = pfc::guid_equal(m_drop_notify_playlist_state.src, contextmenu_item::caller_active_playlist);
+			from_playlist |= pfc::guid_equal(m_drop_notify_playlist_state.src, contextmenu_item::caller_active_playlist_selection);
+
+			static_api_ptr_t<playlist_manager_v5> playlist_api;
+
+			if (!from_playlist) {
+				size_t wc = 0;
+				size_t in_library = false;
+				size_t in_active_playlist = false;
+				bit_array_bittable act_playlist_mask(bit_array_false(), m_drop_notify_playlist_state.active_playlist_item_count);
+
+				for (auto p_handle : op) {
+					vmixed_locs[wc] = { SIZE_MAX, std::pair(SIZE_MAX, SIZE_MAX) };
+					size_t playlist_track_pos = SIZE_MAX;
+					bool act_found = playlist_api->activeplaylist_find_item(p_handle, playlist_track_pos);
+					if (act_found) {
+						in_active_playlist++;
+						//
+						vmixed_locs[wc].first = playlist_track_pos;
+						vmixed_locs[wc].second.first = playlist_api->get_active_playlist();
+						vmixed_locs[wc].second.second = playlist_api->activeplaylist_get_item_count();
+						act_playlist_mask.set(playlist_track_pos, true);
+					}
+					else {
+						in_library++;
+					}
+					++wc;
+				}
+
+				static_api_ptr_t<playlist_manager> playlist_api;
+				pfc::list_t<t_playback_queue_item> queue;
+
+				playlist_api->queue_get_contents(queue);
+				t_size cq = queue.get_count();
+				t_size cadd = 0;
+
+				for (auto it = vmixed_locs.begin(); it != vmixed_locs.end(); it++) {
+					if (it->second.first == SIZE_MAX) {
+
+						//mixed add from lib
+
+						metadb_handle_list mhl_i;
+						for (auto& it_i = it;
+								it_i != vmixed_locs.end(); it_i++) {
+							if (it->second.first != SIZE_MAX) {
+								it_i--;
+								break;
+							}
+							size_t ndx = std::distance(vmixed_locs.begin(), it_i);
+							mhl_i.add_item(op[ndx]); //add handle in op by index
+						}
+
+
+						if (mhl_i.get_count()) {
+							if (m_lastDDMark < cq) {
+								queue_helpers::queue_insert_items(m_lastDDMark + cadd, mhl_i);
+							}
+							else {
+								queue_helpers::queue_add_items(mhl_i, true);
+							}
+							cadd += mhl_i.get_count();
+							mhl_i.remove_all();
+						}
+
+						if (it == vmixed_locs.end()) {
+
+							break;
+						}
+					}
+					else {
+
+						//mixed, add active playlist tracks
+
+						metadb_handle_list mhl_i;
+						size_t pl_first_pos = it->first;
+						size_t pl_index = it->second.first;
+						size_t pl_count = it->second.second;
+
+						bit_array_bittable mask_i(bit_array_false(), pl_count);
+
+						for (auto& it_i = it; it != vmixed_locs.end(); it_i++) {
+							if (it->second.first == SIZE_MAX) {
+								it_i--;
+								break;
+							}
+							size_t ndx = std::distance(vmixed_locs.begin(), it_i);
+							mhl_i.add_item(op[ndx]);
+							mask_i.set(it_i->first, true);
+						}
+
+						// We queue the playlist items using their position in the playlist
+
+						if (mhl_i.get_count()) {
+							queue_helpers::queue_insert_items(m_lastDDMark + cadd,
+								pl_index, mask_i, pl_count);
+
+							cadd += mhl_i.get_count();
+							mhl_i.remove_all();
+						}
+
+						if (it == vmixed_locs.end()) {
+							break;
+						}
+					}
+				} //end for
+			}
+			else {
+				queue_helpers::queue_insert_items(m_lastDDMark,
+					playlist_api->get_active_playlist(),
+					m_drop_notify_playlist_state.active_playlist_selection_mask,
+					playlist_api->activeplaylist_get_item_count());
+
+				vmixed_locs.clear();
+				m_drop_notify_playlist_state.Reset();
+				ClearLastDrop();
+			}
+
+			return;
 
 			if (m_lastDDMark == SIZE_MAX) {
 				//drop over empty list?
@@ -75,13 +229,30 @@ namespace dlg {
 
 				static_api_ptr_t<playlist_manager> playlist_api;
 				pfc::list_t<t_playback_queue_item> queue;
+
 				playlist_api->queue_get_contents(queue);
 				t_size cq = queue.get_count();
-				if (m_lastDDMark < cq) {
-					queue_helpers::queue_insert_items(m_lastDDMark, m_mhl_dropped);
+
+				if (m_drop_notify_playlist_state.active_playlist_index != SIZE_MAX) {
+
+					DEBUG_PRINT << "Queueing playlist items";
+					// We queue the playlist items using their position in the playlist
+					queue_helpers::queue_insert_items(m_lastDDMark,
+							m_drop_notify_playlist_state.active_playlist_index,
+							m_drop_notify_playlist_state.active_playlist_selection_mask,
+						m_drop_notify_playlist_state.active_playlist_item_count);
+
+					m_drop_notify_playlist_state.active_playlist_selected_items.remove_all();
+					m_drop_notify_playlist_state.active_playlist_index = SIZE_MAX;
 				}
 				else {
-					queue_helpers::queue_add_items(m_mhl_dropped, true);
+				
+					if (m_lastDDMark < cq) {
+						queue_helpers::queue_insert_items(m_lastDDMark, m_mhl_dropped);
+					}
+					else {
+						queue_helpers::queue_add_items(m_mhl_dropped, true);
+					}
 				}
 			}
 			ClearLastDrop();
@@ -171,7 +342,7 @@ namespace dlg {
 							need_header_refresh = true;
 						}
 						//requery?
-						need_data_requery = !was_cf->m_value.m_pattern.equals(is_cf->m_value.m_pattern);
+						need_data_requery |= !was_cf->m_value.m_pattern.equals(is_cf->m_value.m_pattern);
 					}
 					else {
 						//field no longer available
@@ -183,21 +354,24 @@ namespace dlg {
 				}
 			}
 
+			//todo: rev
+
+			if (need_header_rebuilt) {
+				BuildColumns(true, false);
+			}
+
 			if (need_data_requery) {
 				QueueReset();
 				QueueRefresh();
 			}
-			else {
-				if (need_header_rebuilt) {
-					BuildColumns(true, false);
-					QueueReset();
-					QueueRefresh();
-				}
-				else if (need_header_refresh) {
-					UpdateHeaderNameAlign();
-				}
+			
+			if (need_header_refresh) {
+				UpdateHeaderNameAlign();
 			}
+		}
 
+		void ResetColumns() {
+			BuildColumns(false, true);
 		}
 
 		void BuildColumns(bool restore, bool defaults = false) {
@@ -210,7 +384,50 @@ namespace dlg {
 			auto DPI = GetDPI();
 
 			if (defaults) {
-				settings->m_columns.remove_all();
+				//or crash OnPaint -shouldn�t be here-?
+				OnColumnsChanged();
+
+				auto reset_cols = 2;
+				//auto reset_cols = 1;
+
+				if (cfg_ui_columns.get_count() >= reset_cols) {
+
+					settings->m_columns.remove_all();
+
+					std::vector<size_t> vdef_keys;
+					if (reset_cols == 2) {
+						vdef_keys = { 1, 0 };
+					}
+					else {
+						vdef_keys = { 1 };
+					}
+
+					for (size_t i = 0; i < vdef_keys.size(); i++) {
+
+						auto width = 90;
+						bool autoWidth = false;
+
+						if (i == 1 || vdef_keys.size() == 1) {
+							width = AUTO_FLAG;
+							autoWidth = true;
+						}
+
+						auto cs = cfg_ui_columns.find(vdef_keys[i]);
+						settings->m_columns.add_item(cs->m_key);
+						ui_column_settings &col_def = settings->m_columns[i];
+						col_def.m_autoWidth = autoWidth;
+						col_def.m_order = i;
+						col_def.m_column_width = width;
+
+						AddColumn(cs->m_value.m_name,
+							col_def.m_column_width,
+							cs->m_value.m_alignment, true);
+					}
+					m_order = GetColumnOrderArray();
+					this->ReloadItems(bit_array_true());
+				}
+				OnColumnsChanged();
+				return;
 			}
 
 			RemoveInvalidColCfgs();
@@ -352,7 +569,7 @@ namespace dlg {
 				auto width = GetColumnWidthF(w);
 				if (!settings->m_columns[w].m_autoWidth) {
 					settings->m_columns[w].m_column_width = width;
-				endif
+				}
 				settings->m_columns[w].m_order = order[w];
 			}
 

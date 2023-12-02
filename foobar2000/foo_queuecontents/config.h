@@ -50,12 +50,13 @@ static const char* default_cfg_playlist_name = "Queue";
 static t_storage_impl<long, ui_column_definition> default_cfg_ui_columns[] = {
 	t_storage_impl<long, ui_column_definition>::create(0, ui_column_definition(pfc::string8("Queue Item"), pfc::string8("%queue_index% - %title%"), COLUMN_ALIGNMENT_LEFT)),
 	t_storage_impl<long, ui_column_definition>::create(1, ui_column_definition(pfc::string8("Queue Index"), pfc::string8("%queue_index%"), COLUMN_ALIGNMENT_LEFT)),
-	t_storage_impl<long, ui_column_definition>::create(2, ui_column_definition(pfc::string8("Queue Total"), pfc::string8("%queue_total%"), COLUMN_ALIGNMENT_LEFT)), 
+	t_storage_impl<long, ui_column_definition>::create(2, ui_column_definition(pfc::string8("Queue Total"), pfc::string8("%queue_total%"), COLUMN_ALIGNMENT_LEFT)),
 	t_storage_impl<long, ui_column_definition>::create(3, ui_column_definition(pfc::string8("Album Artist"), pfc::string8("%album artist%"), COLUMN_ALIGNMENT_LEFT)),
 	t_storage_impl<long, ui_column_definition>::create(4, ui_column_definition(pfc::string8("Album"), pfc::string8("%album%"), COLUMN_ALIGNMENT_LEFT)),
 	t_storage_impl<long, ui_column_definition>::create(5, ui_column_definition(pfc::string8("Title"), pfc::string8("%title%"), COLUMN_ALIGNMENT_LEFT)),
-	t_storage_impl<long, ui_column_definition>::create(6, ui_column_definition(pfc::string8("Track No"), pfc::string8("%tracknumber%"), COLUMN_ALIGNMENT_LEFT)),	
-	t_storage_impl<long, ui_column_definition>::create(7, ui_column_definition(pfc::string8("Codec"), pfc::string8("%codec%"), COLUMN_ALIGNMENT_LEFT))
+	t_storage_impl<long, ui_column_definition>::create(6, ui_column_definition(pfc::string8("Track No"), pfc::string8("%tracknumber%"), COLUMN_ALIGNMENT_LEFT)),
+	t_storage_impl<long, ui_column_definition>::create(7, ui_column_definition(pfc::string8("Codec"), pfc::string8("%codec%"), COLUMN_ALIGNMENT_LEFT)),
+	t_storage_impl<long, ui_column_definition>::create(8, ui_column_definition(pfc::string8("Playlist"), pfc::string8("$if2(%playlist_name%,)"), COLUMN_ALIGNMENT_LEFT))
 };
 
 extern cfg_var_legacy::cfg_string cfg_playlist_name;

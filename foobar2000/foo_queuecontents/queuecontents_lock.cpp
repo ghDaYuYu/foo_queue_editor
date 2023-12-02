@@ -206,4 +206,3 @@ t_size queuecontents_lock::find_playlist() {
 	}
 	return pfc::infinite_size;
 }
-
