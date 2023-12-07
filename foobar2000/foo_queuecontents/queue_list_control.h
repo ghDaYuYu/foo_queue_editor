@@ -369,7 +369,11 @@ namespace dlg {
 		}
 
 		void ResetColumns() {
+			pfc::map_t<long, ui_column_definition> old_ui_col_defs;
+			old_ui_col_defs = cfg_ui_columns;
 			BuildColumns(false, true);
+			QueueReset();
+			QueueRefresh();
 		}
 
 		void BuildColumns(bool restore, bool defaults = false) {

@@ -327,7 +327,10 @@ void CMyPreferences::apply() {
 			}
 		}
 
-		window_manager::SaveUILayout();
+		if (!bSavedUILayout) {
+			window_manager::SaveUILayout();
+		}
+
 		window_manager::UIColumnsChanged(old_ui_col_defs);
 		//window_manager::GlobalRefresh();
 	}

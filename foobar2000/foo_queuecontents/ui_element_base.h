@@ -5,18 +5,29 @@
 
 #include "ui_element_configuration.h"
 #include "ui_element_host.h"
-#include "window_manager.h"
+
 #include "resource.h"
 
 #include "queue_list_control.h"
 #include "queue_helpers.h"
+
+#include "style_manager.h"
 
 class ui_element_base : public ui_element_host,
 	public metadb_io_callback_dynamic_impl_base, private dlg::ILOD_QueueSource {
 
 public:
 
-	ui_element_base() : m_guiList(this, false) {}
+	ui_element_base() : m_guiList(this, false) {
+		//..
+	}
+
+	~ui_element_base() {
+		if (m_cust_stylemanager) {
+			delete m_cust_stylemanager;
+		}
+	}
+
 	// what to do when window_manager requests refresh
 	virtual void Refresh();
 	virtual void GetLayout();
@@ -88,19 +99,27 @@ protected:
 	}
 
 	void setBorderStyle() {
+
 		if (is_dui()) {
 			::SetWindowLongPtr(/*get_wnd()*/m_guiList, GWL_EXSTYLE, 0);
 		}
 		else {
 			::SetWindowLongPtr(/*get_wnd()*/m_guiList, GWL_EXSTYLE, m_settings.m_border);
 		}
+
+		// todo: rev. Update is needed to refresh border, see Remarks from http://msdn.microsoft.com/en-us/library/aa931583.aspx
+		SetWindowPos(get_wnd(), 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 	}
+
+	void ClearDark() { m_dark.clear(); }
 
 	dlg::CListControlQueue m_guiList;
 
 	ui_element_settings m_settings;
 
 	bool inited_successfully;
+
+	StyleManager* m_cust_stylemanager = nullptr;
 
 private:
 

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "queuecontents_lock.h"
 #include "playlist_updater.h"
-#include "window_manager.h"
 
 service_ptr_t<queuecontents_lock> queuecontents_lock::plLock = NULL;
 playlist_updater queuecontents_lock::m_playlist_updater;

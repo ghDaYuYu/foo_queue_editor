@@ -1,7 +1,6 @@
 #pragma once
 #include "config.h"
 #include "config.h"
-#include "window_manager.h"
 #include "queue_helpers.h"
 
 // Forward-declare

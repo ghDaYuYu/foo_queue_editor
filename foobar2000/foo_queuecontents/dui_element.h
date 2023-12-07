@@ -70,6 +70,7 @@ public:
 
 private:
 	void RefreshVisuals();
+	void HideHeader();
 	ui_element_config::ptr m_config;
 
 protected:

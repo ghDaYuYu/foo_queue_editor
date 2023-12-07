@@ -1,10 +1,14 @@
 #include "stdafx.h"
 #include "default_ui_hacks.h"
-#include "dui_element.h"
 #include "config.h"
+#include "style_manager_dui.h"
+#include "dui_element.h"
 
 dui_element::dui_element(ui_element_config::ptr config,ui_element_instance_callback_ptr p_callback) :
 		m_callback(p_callback), m_config(config) {
+
+	m_cust_stylemanager = new DuiStyleManager(m_callback);
+	m_cust_stylemanager->setChangeHandler([&](bool) { this->on_style_change(); });
 
 	TRACK_CALL_TEXT("dui_element::dui_element");
 
@@ -28,7 +32,7 @@ void dui_element::edit_mode_context_menu_command(const POINT & p_point,bool p_fr
 	m_guiList.CommandContextMenu(p_point, p_id, p_id_base);
 }
 
-bool dui_element::edit_mode_context_menu_get_focus_point(POINT & p_point) {	
+bool dui_element::edit_mode_context_menu_get_focus_point(POINT & p_point) {
 	TRACK_CALL_TEXT("dui_element::edit_mode_context_menu_get_focus_point");
 
 	p_point = m_guiList.GetContextMenuPoint(p_point);
@@ -57,43 +61,23 @@ HWND dui_element::get_wnd() {
 	return *this;
 }
 
-void dui_element::RefreshVisuals() {
-	//todo: rev
+void dui_element::HideHeader() {
+
+	toggleHeader(m_hWnd);
 	return;
-	/*
-	TRACK_CALL_TEXT("dui_element::RefreshVisuals");
-	ui_element_base::RefreshVisuals();
-	t_ui_font listfont;
-	t_ui_color backgroundcolor;
-	//t_ui_color highlightcolor;
-	t_ui_color selectioncolor;
-	t_ui_color textcolor;
-	// Hardcoded color value http://www.hydrogenaudio.org/forums/index.php?showtopic=79981&pid=698341&mode=threaded&start=#entry698341
-	t_ui_color insertmarkercolor = RGB(127,127,127);
-	t_ui_color selectionrectanglecolor = RGB(127,127,127);
-	t_ui_color selectedtextcolor;
+}
 
-	// Set font to listbox control
-	listfont = m_callback->query_font_ex(ui_font_lists); 
-	m_guiList.SetFont(listfont);
-	
-	// Query colors and feed them forward to the listbox
-	backgroundcolor = m_callback->query_std_color(ui_color_background);
-	//highlightcolor = m_callback->query_std_color(ui_color_highlight);
-	selectioncolor = m_callback->query_std_color(ui_color_selection);
-	textcolor = m_callback->query_std_color(ui_color_text);
-	selectedtextcolor = default_ui_hacks::DetermineSelectedTextColor(selectioncolor);
-	//m_guiList.SetColors(backgroundcolor, selectioncolor, textcolor, insertmarkercolor, selectionrectanglecolor, selectedtextcolor);
-
-	Invalidate();
-	*/
+void dui_element::RefreshVisuals() {
+	//todo: remove
+	return;
 }
 
 void dui_element::notify(const GUID & p_what, t_size p_param1, const void * p_param2, t_size p_param2size) {
 	TRACK_CALL_TEXT("dui_element::notify");
+
 	if (p_what == ui_element_notify_colors_changed || p_what == ui_element_notify_font_changed) {
-		// we use global colors and fonts - trigger a repaint whenever these change.
-		RefreshVisuals();
+
+		m_cust_stylemanager->onChange();
 	}
 }
 

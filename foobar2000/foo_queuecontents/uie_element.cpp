@@ -23,7 +23,8 @@ void uie_element::HideHeader() {
 }
 
 void uie_element::RefreshVisuals() {
-	TRACK_CALL_TEXT("uie_element::RefreshVisuals");
+	//todo: remove
+	/*TRACK_CALL_TEXT("uie_element::RefreshVisuals");
 	ui_element_base::RefreshVisuals();
 	console::formatter() << "Refresh visuals";
 	columns_ui::colours::helper vis = columns_ui::colours::helper::helper(uie_colours_client_guid);
@@ -31,16 +32,15 @@ void uie_element::RefreshVisuals() {
 	columns_ui::fonts::helper fonts = columns_ui::fonts::helper::helper(uie_font_client_guid);
 
 	m_guiList.SetFont(fonts.get_font());
-
-	//todo: rev
+	*/
 	/*m_listview.SetColors(vis.get_colour(columns_ui::colours::colour_background),
 		vis.get_colour(columns_ui::colours::colour_selection_background),
 		vis.get_colour(columns_ui::colours::colour_text),
 		vis.get_colour(columns_ui::colours::colour_active_item_frame),
 		vis.get_colour(columns_ui::colours::colour_active_item_frame),
-		vis.get_colour(columns_ui::colours::colour_selection_text));*/
+		vis.get_colour(columns_ui::colours::colour_selection_text));
 
-	InvalidateWnd();
+	InvalidateWnd();*/
 }
 
 void uie_element::save_configuration() {
@@ -103,7 +103,7 @@ LRESULT uie_element::on_message(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			}
 		}
 		//DEBUG_PRINT << "Final try to handle the message: DefWindowProc";
-		lResult = uDefWindowProc(hWnd, uMsg, wParam, lParam);		
+		lResult = uDefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	return lResult;

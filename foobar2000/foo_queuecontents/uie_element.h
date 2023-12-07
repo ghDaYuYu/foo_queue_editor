@@ -19,7 +19,7 @@ static const GUID uie_colours_client_guid =
 class queuecontents_uie_colours_client : public columns_ui::colours::client {
 	
 	virtual void get_name(pfc::string_base & out) const {
-		out.set_string(COMPONENT_NAME_HC);
+		out.set_string(COMPONENT_NAME_H);
 	}
 
 	virtual const GUID & get_client_guid() const {
@@ -77,6 +77,7 @@ private:
 		__implement_get_class_data(_T("{6B864D3B-70FB-4990-B44C-AED3F2C3FCAE}"), false); //mod
 	}
 	LRESULT on_message(HWND wnd, UINT msg, WPARAM wp, LPARAM lp);
+
 public:
 	// ui_element_base
 	virtual void RefreshVisuals();

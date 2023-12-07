@@ -8,12 +8,10 @@
 #include "guids.h"
 #include "queuecontents_lock.h"
 
-#include "window_manager.h"
-
 #include "queuecontents_lock.h"
 #include "header_static.h"
 
-#define NAME_COLUMN_TEXT "Name"
+#define NAME_COLUMN_TEXT "Column name"
 #define PATTERN_COLUMN_TEXT "Pattern"
 #define ALIGNMENT_COLUMN_TEXT "Alignment"
 
@@ -21,10 +19,9 @@
 #define ALIGNMENT_CENTER "Center"
 #define ALIGNMENT_RIGHT "Right"
 
-#define TT_INFO_TEXT "%queue_index%, %queue_total%, " \
-					"%list_index% and %list_total% work here.\r\n\r\n" \
-					"Use %playlist_name% for the playlist of the queued item."
-
+#define TT_INFO_TEXT    "%queue_index%, %queue_total%, " \
+						"%list_index% and %list_total% work here.\r\n\r\n" \
+						"Use %playlist_name% for the playlist of the queued item."
 struct field_t {
 	long id = 0;
 	pfc::string8 name;

@@ -80,6 +80,11 @@ void ui_element_base::toggleHeader(HWND parent) {
 BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 	TRACK_CALL_TEXT("ui_element_base::OnInitDialog");
 
+	if (!is_dui()) {
+		m_cust_stylemanager = new CuiStyleManager();
+		m_cust_stylemanager->setChangeHandler([&](bool) { this->on_style_change(); });
+	}
+
 	inited_successfully = false;
 
 	// wnd parameter 'overrides' get_wnd if it is set
@@ -96,9 +101,6 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 
 	m_dark.AddDialogWithControls(parent);
 
-	m_guiList.CreateInDialog(parent, IDC_QUEUELIST);
-	m_guiList.InitializeHeaderCtrl(/*HDS_HIDDEN*/HDS_DRAGDROP | HDS_BUTTONS);
-
 	m_guiList.SetPlaylistStyle();
 	m_guiList.SetWantReturn(true);
 
@@ -110,13 +112,9 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 	// Update is needed to refresh border, see Remarks from http://msdn.microsoft.com/en-us/library/aa931583.aspx
 	SetWindowPos(get_wnd(), 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-	// Update fonts and colors
-	RefreshVisuals();
-	
-	window_manager::AddWindow(this);
+	on_style_change();
 
-	// Update UI
-	Refresh();
+	window_manager::AddWindow(this);
 
 	inited_successfully = m_guiList.GetColumnCount();
 	DEBUG_PRINT << "ui_element_base::OnInitDialog. Inited successfully? " << inited_successfully;
@@ -211,7 +209,7 @@ void ui_element_base::Refresh() {
 void ui_element_base::PrefColumnsChanged(bool reset) {
 	TRACK_CALL_TEXT("ui_element_base::ColumnsChanged");
 
-	//todo: rev params
+	//todo: rev params, column/field changes
 	m_guiList.BuildColumns(!reset, reset);
 	m_guiList.QueueReset();
 	m_guiList.QueueRefresh();
