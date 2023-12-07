@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "queue_list_control.h"
 #include "queue_list_control_ILO.h"
+#include "foo_vbookmark/IBookmark.h"
 
 
 namespace dlg {
@@ -109,6 +110,99 @@ namespace dlg {
 		void on_aborted() override {}
 	};
 
+	//todo
+	bool GetActivePlaylistState(ActivePlaylistInformation &drop_notify_playlist_state) {
+
+		pfc::list_t<metadb_handle_ptr> mhpl_selection_mngr;
+		static_api_ptr_t<ui_selection_manager> selection_manager;
+		selection_manager->get_selection(mhpl_selection_mngr);
+		auto dbg_sm_guid = selection_manager->get_selection_type();
+		
+		bool from_x = false;
+		bool from_library = false;
+		bool from_playlist = false;
+		bool from_now_playing = false;
+		bool from_active_playlist_selection = false;
+
+		auto guid_sel_type = selection_manager->get_selection_type();
+		drop_notify_playlist_state.src = guid_sel_type;
+
+		GUID guid_x = pfc::GUID_from_text("D154DEDA-7BE7-4075-809A-647DF819E574");
+
+		GUID guid_active_sel = contextmenu_item::caller_active_playlist_selection;
+	
+		auto guid_dbg = ui_selection_manager::get()->get_selection_type();
+
+		from_playlist = pfc::guid_equal(guid_sel_type, contextmenu_item::caller_active_playlist_selection);
+		// 994C0D0E-319E-45F3-92FC-518616E73ADC
+		from_now_playing = pfc::guid_equal(guid_sel_type, contextmenu_item::caller_now_playing);
+		// D154DEDA-7BE7-4075-809A-647DF819E574
+		from_x = pfc::guid_equal(guid_sel_type, guid_mistery);
+		// FDA07C56-05D0-4B84-9FBD-A8BE556D474D
+		from_library = pfc::guid_equal(guid_sel_type, contextmenu_item::caller_media_library_viewer);
+		// 47502BA1-816D-4a3e-ADE5-A7A9860A67DB
+		from_active_playlist_selection = pfc::guid_equal(guid_sel_type, contextmenu_item::caller_active_playlist_selection);
+
+		if (from_library || from_x) {
+
+			if (from_x) {
+				//..
+			}
+
+			//todo: rev
+			//pqi might get a hold of the active playlist index
+			//selected positions,...
+
+			static_api_ptr_t<playlist_manager_v5> playlist_api;
+			auto active_ndx = playlist_api->get_active_playlist();
+			if (active_ndx != ~0) {
+				auto pl_item_count = playlist_api->activeplaylist_get_item_count();
+				if (pl_item_count) {
+
+					metadb_handle_list pmhl_allitems;
+					drop_notify_playlist_state.active_playlist_index = active_ndx;
+					drop_notify_playlist_state.active_playlist_item_count = pl_item_count;
+					drop_notify_playlist_state.active_playlist_all_items = std::move(pmhl_allitems);
+					return true;
+				}
+			}
+		}
+
+		if (from_playlist) {
+
+			static_api_ptr_t<playlist_manager_v5> playlist_api;
+			auto active_ndx = playlist_api->get_active_playlist();
+			if (active_ndx != ~0) {
+
+				auto csel = playlist_api->activeplaylist_get_selection_count(255);
+
+				if (csel) {
+
+					auto pl_item_count = playlist_api->activeplaylist_get_item_count();
+					pfc::bit_array_bittable selmask(bit_array_false(), pl_item_count);
+					playlist_api->activeplaylist_get_selection_mask(selmask);
+					t_size item = selmask.find_first(true, 0, pl_item_count);
+
+					if (item < pl_item_count) {
+					
+						metadb_handle_list pmhl_selected;
+						metadb_handle_list pmhl_allitems;
+						playlist_api->activeplaylist_get_selected_items(pmhl_selected);
+
+						drop_notify_playlist_state.active_playlist_index = active_ndx;
+						drop_notify_playlist_state.active_playlist_item_count = pl_item_count;
+						drop_notify_playlist_state.active_playlist_selection_mask = selmask;
+						drop_notify_playlist_state.active_playlist_selected_items = std::move(pmhl_selected);
+
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	//todo
 	void ILOD_QueueSource::listOnDrop(ctx_t ctx, IDataObject* obj, CPoint pt) {
 
 		DEBUG_PRINT << "listOnDrop";
@@ -117,11 +211,13 @@ namespace dlg {
 
 		plc->SetLastDDMark();
 
-		ActivePlaylistInformation drop_notify_playlist_state;
-		if (GetActivePlaylistState(drop_notify_playlist_state)) {
+		ActivePlaylistInformation dron_playlist_state;
+		if (GetActivePlaylistState(dron_playlist_state)) {
 			//..
 		}
-		plc->SetDropNofifyPlaylistStated(std::move(drop_notify_playlist_state));
+
+		dron_playlist_state.ibom_selection_guids = std::move(v_ibom_guids);
+		plc->SetDropNofifyPlaylistStated(std::move(dron_playlist_state));
 
 		auto notify = fb2k::service_new< process_locations_notify_lambda >();
 		notify->f = plc->m_drop_notify_async_fx;

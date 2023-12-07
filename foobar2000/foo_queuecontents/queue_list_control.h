@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include "pfc/array.h"
 #include "libPPUI/CFlashWindow.h"
 #include "libPPUI/CListControlOwnerData.h"
@@ -17,7 +18,6 @@
 
 namespace dlg {
 
-	//todo: clean up
 	//contains information about the state of the active playlist at the time of drop
 	struct ActivePlaylistInformation {
 		// pfc::infinite_size if the drop is the drop is not coming from active playlist
@@ -27,6 +27,7 @@ namespace dlg {
 		pfc::bit_array_bittable active_playlist_selection_mask;
 		pfc::list_t<metadb_handle_ptr> active_playlist_selected_items;
 		pfc::list_t<metadb_handle_ptr> active_playlist_all_items;
+		std::vector<GUID> ibom_selection_guids;
 
 		void Reset() {
 			src = pfc::guid_null;
@@ -79,129 +80,257 @@ namespace dlg {
 			m_lastDDMark = GetDropMark();
 		}
 
+		//todo: bookmark copy/paste
+		void SetLastDDMarkIbom() {
+			m_lastDDMark = GetItemCount();
+		}
+
 		void ClearLastDrop() {
 			m_mhl_dropped.remove_all();
 			m_lastDDMark = SIZE_MAX;
 		}
 
 		void SetDropNofifyPlaylistStated(ActivePlaylistInformation drop_notify_playlist_state) {
-			m_drop_notify_playlist_state = drop_notify_playlist_state;
+			m_dron_plst = drop_notify_playlist_state;
 		}
 
-		ActivePlaylistInformation m_drop_notify_playlist_state = {};
+		ActivePlaylistInformation m_dron_plst = {};
 
 		// drop notify async fx
 
-		process_locations_notify::func_t m_drop_notify_async_fx = [&](metadb_handle_list_cref op) {
+		//todo: rev/remove
+		size_t get_next_dup_pos(metadb_handle_ptr p_handle, size_t pl_ndx, size_t trk_pos, size_t dup_delta) {
 
-			m_mhl_dropped = op;
+			size_t next_dup = SIZE_MAX;
 
-			//pos playlist, pair playlist_ndx, playlist_items_count
-			std::vector <std::pair<size_t, std::pair<size_t, size_t>>> vmixed_locs;
+			static_api_ptr_t<playlist_manager_v5> playlist_api;
+			metadb_handle_list mhl;
+			playlist_api->playlist_get_all_items(pl_ndx, mhl);
+			for (auto i = trk_pos + 1; i < mhl.get_count(); i++) {
+				if (!stricmp_utf8(mhl.get_item(i)->get_path(), p_handle->get_path())) {
+					dup_delta--;
+					if (!dup_delta) {
+						next_dup = i;
+						break;
+					}
+				}
+			}
 
-			vmixed_locs.resize(op.get_count());
+			return next_dup;
+		}
 
-			bool from_playlist = pfc::guid_equal(m_drop_notify_playlist_state.src, contextmenu_item::caller_active_playlist);
-			from_playlist |= pfc::guid_equal(m_drop_notify_playlist_state.src, contextmenu_item::caller_active_playlist_selection);
+		process_locations_notify::func_t m_drop_notify_async_fx = [&](metadb_handle_list_cref mhl_drop) {
+
+			m_mhl_dropped = mhl_drop;
+
+			bool from_playlist = pfc::guid_equal(m_dron_plst.src, contextmenu_item::caller_active_playlist);
+			from_playlist |= pfc::guid_equal(m_dron_plst.src, contextmenu_item::caller_active_playlist_selection);
 
 			static_api_ptr_t<playlist_manager_v5> playlist_api;
 
+			bool bBookmarkDeco = m_dron_plst.ibom_selection_guids.size();
+
+			std::vector <inplay_t> vmixed;
+			vmixed.resize(mhl_drop.get_count());
+
 			if (!from_playlist) {
-				size_t wc = 0;
+
 				size_t in_library = false;
 				size_t in_active_playlist = false;
-				bit_array_bittable act_playlist_mask(bit_array_false(), m_drop_notify_playlist_state.active_playlist_item_count);
 
-				for (auto p_handle : op) {
-					vmixed_locs[wc] = { SIZE_MAX, std::pair(SIZE_MAX, SIZE_MAX) };
-					size_t playlist_track_pos = SIZE_MAX;
-					bool act_found = playlist_api->activeplaylist_find_item(p_handle, playlist_track_pos);
-					if (act_found) {
+				bit_array_bittable depri_act_playlist_mask(bit_array_false(), m_dron_plst.active_playlist_item_count);
+
+				// prepare vmixed
+				// dropping bookmarks makes this lower than is usual
+				// route playlist/handle queueing (inc. bookmarks)  
+
+				GUID w_ibom_GUID = pfc::guid_null;
+				size_t w_handle = 0;
+				for (auto p_handle : mhl_drop) {
+
+					w_ibom_GUID = bBookmarkDeco ? m_dron_plst.ibom_selection_guids[w_handle] : w_ibom_GUID;
+					size_t pl_track_pos;
+
+					size_t guid_pl_ndx;
+
+					//todo: rev/remove
+					//wrong track pos with duplicates
+					bool pl_owned = playlist_api->activeplaylist_find_item(p_handle, pl_track_pos);
+					if (!pfc::guid_equal(pfc::guid_null, w_ibom_GUID)) {
+						size_t guid_pl_trk_pos;
+						guid_pl_ndx = playlist_api->find_playlist_by_guid(w_ibom_GUID);
+						bool guid_pl_ok = playlist_api->playlist_find_item(guid_pl_ndx, p_handle, guid_pl_trk_pos);
+						pl_owned = guid_pl_ok;
+						pl_track_pos = guid_pl_trk_pos;
+					}
+
+					if (pl_owned) {
+
+						size_t pl_ndx;
+						if (!pfc::guid_equal(pfc::guid_null, w_ibom_GUID)) {
+							pl_ndx = guid_pl_ndx;
+
+						}
+						else {
+							pl_ndx = playlist_api->get_active_playlist();
+						}
+
+						//orphans 'send to queue', active pl,...
+						//running !from_playlist exec path (do not use m_dron_plst.active_playlist_index)
+
 						in_active_playlist++;
-						//
-						vmixed_locs[wc].first = playlist_track_pos;
-						vmixed_locs[wc].second.first = playlist_api->get_active_playlist();
-						vmixed_locs[wc].second.second = playlist_api->activeplaylist_get_item_count();
-						act_playlist_mask.set(playlist_track_pos, true);
+
+						std::map<size_t, size_t>map_dup;
+
+						auto found_dup_it = std::find_if(vmixed.begin(), vmixed.begin()+ w_handle, [=](const inplay_t & rec) {
+							return rec.trk_pos == pl_track_pos && rec.pl_ndx == pl_ndx;
+							});
+
+						inplay_t & mixed_rec = vmixed[w_handle];
+
+						mixed_rec.trk_pos = pl_track_pos;
+						mixed_rec.pl_ndx = pl_ndx;
+						mixed_rec.pl_size = playlist_api->activeplaylist_get_item_count();
+
+						if (found_dup_it != vmixed.begin() + w_handle /*range*/) {
+
+							auto dbg_count_this_dups = std::count_if(vmixed.begin(), vmixed.begin() + w_handle, [=](const inplay_t rec) {
+								return rec.trk_pos == mixed_rec.trk_pos;
+								});
+
+							auto this_dup_ndx = get_next_dup_pos(p_handle, mixed_rec.pl_ndx,
+								found_dup_it->trk_pos, dbg_count_this_dups);
+
+							mixed_rec.trk_dup = found_dup_it->trk_pos;
+							//todo: rev/remove. Misc discontinuous playlist chunks bookmarks dropped... 
+							mixed_rec.trk_pos = this_dup_ndx == SIZE_MAX ? found_dup_it->trk_pos : this_dup_ndx;
+						}
+						depri_act_playlist_mask.set(pl_track_pos, true);
 					}
 					else {
 						in_library++;
 					}
-					++wc;
+					++w_handle;
 				}
 
-				static_api_ptr_t<playlist_manager> playlist_api;
-				pfc::list_t<t_playback_queue_item> queue;
+				// mix ready.
 
+				// queue handles/playlist items
+
+				pfc::list_t<t_playback_queue_item> queue;
 				playlist_api->queue_get_contents(queue);
-				t_size cq = queue.get_count();
+
 				t_size cadd = 0;
 
-				for (auto it = vmixed_locs.begin(); it != vmixed_locs.end(); it++) {
-					if (it->second.first == SIZE_MAX) {
+				for (auto it = vmixed.begin(); it != vmixed.end(); it++) {
 
-						//mixed add from lib
+					// assign to playlist?
+					if (it->pl_ndx == SIZE_MAX || it->trk_pos == SIZE_MAX) {
 
-						metadb_handle_list mhl_i;
-						for (auto& it_i = it;
-								it_i != vmixed_locs.end(); it_i++) {
-							if (it->second.first != SIZE_MAX) {
+						// from lib (playlist ~0 or track not in this playlist)
+
+						// advance in vmixed while from lib
+						metadb_handle_list mhl_chunk;
+						for (auto& it_i = it; it_i != vmixed.end() /*&& it->second.first == SIZE_MAX*/; it_i++) {
+
+							if (it->pl_ndx != SIZE_MAX && it->trk_pos != SIZE_MAX) {
+								//chunk ends, step back iterator and break
 								it_i--;
 								break;
 							}
-							size_t ndx = std::distance(vmixed_locs.begin(), it_i);
-							mhl_i.add_item(op[ndx]); //add handle in op by index
+
+							size_t ndx = std::distance(vmixed.begin(), it_i);
+							mhl_chunk.add_item(mhl_drop[ndx]);
 						}
 
+						//queue !in_playlist
+						if (mhl_chunk.get_count()) {
 
-						if (mhl_i.get_count()) {
-							if (m_lastDDMark < cq) {
-								queue_helpers::queue_insert_items(m_lastDDMark + cadd, mhl_i);
+							if (m_lastDDMark + cadd < queue.get_count()) {
+								queue_helpers::queue_insert_items(m_lastDDMark + cadd, mhl_chunk);
 							}
 							else {
-								queue_helpers::queue_add_items(mhl_i, true);
+								queue_helpers::queue_add_items(mhl_chunk, true);
 							}
-							cadd += mhl_i.get_count();
-							mhl_i.remove_all();
+							cadd += mhl_chunk.get_count();
+							mhl_chunk.remove_all();
 						}
 
-						if (it == vmixed_locs.end()) {
-
+						if (it == vmixed.end()) {
+							//done
 							break;
 						}
 					}
 					else {
 
-						//mixed, add active playlist tracks
+						//mixed owned by /*active*/ playlist
 
-						metadb_handle_list mhl_i;
-						size_t pl_first_pos = it->first;
-						size_t pl_index = it->second.first;
-						size_t pl_count = it->second.second;
+						metadb_handle_list mhl_chunk;
+						std::vector <inplay_t*> vmixed_chunk_ref;
+						size_t dbg_pl_first_pos = it->trk_pos;
+						size_t pl_index = it->pl_ndx;
+						size_t pl_count = it->pl_size;
 
-						bit_array_bittable mask_i(bit_array_false(), pl_count);
+						// prepare playlist mask for this chunk
+						bit_array_bittable pl_mask(bit_array_false(), pl_count);
 
-						for (auto& it_i = it; it != vmixed_locs.end(); it_i++) {
-							if (it->second.first == SIZE_MAX) {
+						const auto first_it_i = it;
+						size_t dups_in_chunk = 0;
+						size_t dbg_w = 0;
+						for (auto& it_i = it; it_i != vmixed.end(); it_i++) {
+							auto dbg_first = first_it_i->trk_pos;
+							auto dbg_i = it_i->trk_pos;
+							dbg_w++;
+							if ((it->pl_ndx == SIZE_MAX || it->trk_pos == SIZE_MAX) || it->pl_ndx != first_it_i->pl_ndx) {
+								//chunk ends, step back iterator and break
 								it_i--;
 								break;
 							}
-							size_t ndx = std::distance(vmixed_locs.begin(), it_i);
-							mhl_i.add_item(op[ndx]);
-							mask_i.set(it_i->first, true);
+
+							//todo: rev/remove
+							bool dupe = it_i->trk_dup != SIZE_MAX;
+							if (dupe) {
+								dups_in_chunk++;
+							}
+
+							size_t drop_ndx = std::distance(vmixed.begin(), it_i);
+							mhl_chunk.add_item(mhl_drop[drop_ndx]);
+							auto dbg_path = mhl_drop[drop_ndx]->get_path();
+							vmixed_chunk_ref.emplace_back(&*it_i);
+							
+							//todo: rev/remove
+							if (dupe) {
+								auto dbg_count_this_dups = std::count_if(first_it_i, it_i, [=](const inplay_t rec) {
+									return rec.trk_pos == it_i->trk_pos;
+									}
+								);
+
+								//distance from first occurrence in chunk
+								auto fo_it = std::find_if(first_it_i, it_i, [=](const inplay_t rec) {
+									return rec.trk_pos == it_i->trk_pos;
+									});
+								auto delta = std::distance(fo_it, it_i);
+								pl_mask.set(it_i->trk_pos + delta/*count_dups*/, true);
+
+							}
+							else {
+								pl_mask.set(it_i->trk_pos, true);
+							}
 						}
 
-						// We queue the playlist items using their position in the playlist
+						// Queue the playlist items by pos in the playlist
 
-						if (mhl_i.get_count()) {
+						if (mhl_chunk.get_count()) {
+
 							queue_helpers::queue_insert_items(m_lastDDMark + cadd,
-								pl_index, mask_i, pl_count);
+								pl_index, vmixed_chunk_ref, pl_count);
 
-							cadd += mhl_i.get_count();
-							mhl_i.remove_all();
+							cadd += mhl_chunk.get_count();
+							mhl_chunk.remove_all();
 						}
 
-						if (it == vmixed_locs.end()) {
+						if (it == vmixed.end()) {
+							//done
 							break;
 						}
 					}
@@ -210,11 +339,11 @@ namespace dlg {
 			else {
 				queue_helpers::queue_insert_items(m_lastDDMark,
 					playlist_api->get_active_playlist(),
-					m_drop_notify_playlist_state.active_playlist_selection_mask,
+					m_dron_plst.active_playlist_selection_mask,
 					playlist_api->activeplaylist_get_item_count());
 
-				vmixed_locs.clear();
-				m_drop_notify_playlist_state.Reset();
+				vmixed.clear();
+				m_dron_plst.Reset();
 				ClearLastDrop();
 			}
 
@@ -227,27 +356,25 @@ namespace dlg {
 
 			if (m_lastDDMark != SIZE_MAX) {
 
-				static_api_ptr_t<playlist_manager> playlist_api;
 				pfc::list_t<t_playback_queue_item> queue;
 
 				playlist_api->queue_get_contents(queue);
-				t_size cq = queue.get_count();
 
-				if (m_drop_notify_playlist_state.active_playlist_index != SIZE_MAX) {
+				if (m_dron_plst.active_playlist_index != SIZE_MAX) {
 
 					DEBUG_PRINT << "Queueing playlist items";
-					// We queue the playlist items using their position in the playlist
+					// Queue playlist items by pos in the playlist
 					queue_helpers::queue_insert_items(m_lastDDMark,
-							m_drop_notify_playlist_state.active_playlist_index,
-							m_drop_notify_playlist_state.active_playlist_selection_mask,
-						m_drop_notify_playlist_state.active_playlist_item_count);
+							m_dron_plst.active_playlist_index,
+							m_dron_plst.active_playlist_selection_mask,
+						m_dron_plst.active_playlist_item_count);
 
-					m_drop_notify_playlist_state.active_playlist_selected_items.remove_all();
-					m_drop_notify_playlist_state.active_playlist_index = SIZE_MAX;
+					m_dron_plst.active_playlist_selected_items.remove_all();
+					m_dron_plst.active_playlist_index = SIZE_MAX;
 				}
 				else {
 				
-					if (m_lastDDMark < cq) {
+					if (m_lastDDMark < queue.get_count()) {
 						queue_helpers::queue_insert_items(m_lastDDMark, m_mhl_dropped);
 					}
 					else {
@@ -259,7 +386,7 @@ namespace dlg {
 		};
 
 		void SetHost(ui_element_host* host) { m_ui_host = host; }
-
+		ui_element_host* GetHost() { return m_ui_host; };
 		//todo: revise shared selections
 
 		void SetSharedSelection(metadb_handle_list_cref p_items);
@@ -302,6 +429,7 @@ namespace dlg {
 		void OnDestroy() {
 
 			m_shared_selection.release();
+			SetMsgHandled(FALSE);
 		}
 
 		void OnKillFocus(CWindow wndFocus);
@@ -452,12 +580,12 @@ namespace dlg {
 				}
 
 				AddColumn(column_settings->m_value.m_name, MulDiv(static_cast<int>(400), DPI.cx, 96), column_settings->m_value.m_alignment, true);
-			
+
 				if (settings->m_relative_column_widths) {
 
 					ResizeColumn(i, AUTO_FLAG);
 				}
-			
+
 				//order
 				t_uint32 tmp_order = settings->m_columns[i].m_order;
 				if (tmp_order == ~0 || tmp_order >= columnCount) {
@@ -507,9 +635,9 @@ namespace dlg {
 			// add list control column
 			cfg_ui_iterator column_settings = cfg_ui_columns.find(field_id);
 			auto DPI = GetDPI();
-		
+
 			AddColumn(column_settings->m_value.m_name, MulDiv(static_cast<int>(70), DPI.cx, 96), column_settings->m_value.m_alignment, true);
-		
+
 			if (settings->m_relative_column_widths) {
 				
 				ResizeColumn(new_ndx, AUTO_FLAG);

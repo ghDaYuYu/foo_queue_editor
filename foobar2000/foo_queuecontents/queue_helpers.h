@@ -1,6 +1,13 @@
 #pragma once
-#include "window_manager.h"
+#include "window_manager.h" //NoRefreshScope
 #include "reorder_helpers.h"
+
+struct inplay_t {
+	size_t trk_pos = SIZE_MAX;
+	size_t trk_dup = SIZE_MAX;
+	size_t pl_ndx = SIZE_MAX;
+	size_t pl_size = 0;
+};
 
 class queue_helpers {
 public:
@@ -18,12 +25,6 @@ public:
 
 	static void queue_reorder(const pfc::list_t<t_size>& p_order) {
 		TRACK_CALL_TEXT("queue_helpers::queue_reorder");
-#ifdef _DEBUG
-		PFC_ASSERT(static_api_ptr_t<playlist_manager>()->queue_get_count() == p_order.get_count());
-		for(t_size i = 0; i < p_order.get_count(); i++) {
-			PFC_ASSERT(0 <= p_order[i] && p_order[i] < static_api_ptr_t<playlist_manager>()->queue_get_count());
-		}
-#endif
 
 		queue_reorder(p_order.get_ptr());
 	}
@@ -72,49 +73,67 @@ public:
 		queue_duplicate_items(insertionPoint, indicesToDuplicate);
 	}
 
-	// Queue items from a single playlist, preserves "connection" to the playlist
-	static void queue_insert_items(t_size insertionPoint, t_size playlist_index, const bit_array & items, t_size items_count) {
-		TRACK_CALL_TEXT("queue_helpers::queue_insert_items - bit array");
+	static size_t queue_insert_items(t_size insertionPoint, t_size playlist_index, const std::vector <inplay_t*> &vmixed_chunk_ref, t_size pl_count) {
+		size_t cinserts = 0;
+	
 		static_api_ptr_t<playlist_manager> playlist_api;
 		pfc::list_t<t_playback_queue_item> queue;
 		playlist_api->queue_get_contents(queue);
-		t_size queue_orig_count = queue.get_count();		
+		t_size queue_orig_count = queue.get_count();
 
 		NoRefreshScope tmp;
 
-		playlist_api->queue_flush();
-#ifdef _DEBUG
-		t_size debug_counter = 0;
-#endif _DEBUG
+		if (insertionPoint <= queue_orig_count) {
+			playlist_api->queue_flush();
+		}
 
-		for(t_size i = 0; i < insertionPoint; i++) {
-#ifdef _DEBUG
-			console::formatter() << debug_counter << " Inserting orig " << queue[i].m_playlist << "," << queue[i].m_item;
-			debug_counter++;
-#endif			
+		for (t_size i = 0; i < insertionPoint; i++) {
 			add_queue_item(queue[i]);
 		}
 
-		t_size item = items.find_first(true, 0, items_count);
-		while(item < items_count) {
-#ifdef _DEBUG
-			console::formatter() << debug_counter << " Inserting new  file.";
-			debug_counter++;
-#endif
-			playlist_api->queue_add_item_playlist(playlist_index, item);
-			item = items.find_next(true, item, items_count);
+		for (auto inplay : vmixed_chunk_ref) {
+			playlist_api->queue_add_item_playlist(playlist_index, inplay->trk_pos);
+			cinserts++;
+		}
+
+		for (t_size i = insertionPoint; i < queue_orig_count; i++) {
+			add_queue_item(queue[i]);
+		}
+		return cinserts;
+	}
+
+	// Queue items from a single playlist, preserves "connection" to the playlist
+	static size_t queue_insert_items(t_size insertionPoint, t_size playlist_index, const bit_array & pl_mask, t_size pl_count) {
+		TRACK_CALL_TEXT("queue_helpers::queue_insert_items - bit array");
+
+		size_t cinserts = 0;
+
+		static_api_ptr_t<playlist_manager> playlist_api;
+		pfc::list_t<t_playback_queue_item> queue;
+		playlist_api->queue_get_contents(queue);
+		t_size queue_orig_count = queue.get_count();
+
+		NoRefreshScope tmp;
+
+		if (insertionPoint <= queue_orig_count) {
+			playlist_api->queue_flush();
+		}
+
+		for(t_size i = 0; i < insertionPoint; i++) {
+			add_queue_item(queue[i]);
+		}
+
+		t_size track_ndx = pl_mask.find_first(true, 0, pl_count);
+		while(track_ndx < pl_count) {
+			playlist_api->queue_add_item_playlist(playlist_index, track_ndx);
+			cinserts++;
+			track_ndx = pl_mask.find_next(true, track_ndx, pl_count);
 		}
 
 		for(t_size i = insertionPoint; i < queue_orig_count; i++) {
-#ifdef _DEBUG
-			console::formatter() << debug_counter << " Inserting orig " << queue[i].m_playlist << "," << queue[i].m_item;
-			debug_counter++;
-#endif
 			add_queue_item(queue[i]);
 		}
-
-		
-		
+		return cinserts;
 	}
 
 	// Inserts metadb_handles to a given point
@@ -126,39 +145,22 @@ public:
 		playlist_api->queue_get_contents(queue);
 		t_size queue_orig_count = queue.get_count();
 
-		//disable updating queue UIs		
+		//disable updating queue UIs
 		NoRefreshScope tmp;
 
 		playlist_api->queue_flush();
-#ifdef _DEBUG
-		t_size debug_counter = 0;
-#endif _DEBUG
 
 		for(t_size i = 0; i < insertionPoint; i++) {
-#ifdef _DEBUG
-			console::formatter() << debug_counter << " Inserting orig " << queue[i].m_playlist << "," << queue[i].m_item;
-			debug_counter++;
-#endif			
 			add_queue_item(queue[i]);
 		}
 
 		for(t_size i = 0; i < new_data_count; i++) {
-#ifdef _DEBUG
-			console::formatter() << debug_counter << " Inserting new  " << p_data[i]->get_path();
-			debug_counter++;
-#endif
 			playlist_api->queue_add_item(p_data[i]);
 		}
 
 		for(t_size i = insertionPoint; i < queue_orig_count; i++) {
-#ifdef _DEBUG
-			console::formatter() << debug_counter << " Inserting orig " << queue[i].m_playlist << "," << queue[i].m_item;
-			debug_counter++;
-#endif
 			add_queue_item(queue[i]);
 		}
-
-		
 	}
 
 	static void move_items_hold_structure_reordering(bool up, 
@@ -167,33 +169,18 @@ public:
 		pfc::list_t<t_size>& ordering) {
 		
 		TRACK_CALL_TEXT("queue_helpers::move_items_hold_structure_reordering");
+	
 		t_size queueCount =  static_api_ptr_t<playlist_manager>()->queue_get_count();
-#ifdef _DEBUG		
-		{
-			for(t_size i = 0; i < indices_to_move.get_count(); i++) {
-				PFC_ASSERT(0 <= indices_to_move[i] && indices_to_move[i] < static_api_ptr_t<playlist_manager>()->queue_get_count());
-			}
-		}
-#endif
 		reorder_helpers::move_items_hold_structure_reordering(up, indices_to_move, new_indices, ordering, queueCount);
 	}
 
 	// Calculates the reordering when items move in to moveIndex
 	static void queue_move_items_reordering(int moveIndex, const pfc::list_base_const_t<t_size> & indicesToMove, pfc::list_base_t<t_size> & newIndices, pfc::list_t<t_size>& ordering) {
 		TRACK_CALL_TEXT("queue_helpers::queue_move_items_reordering");
+
 		int queueCount =  pfc::downcast_guarded<int>( static_api_ptr_t<playlist_manager>()->queue_get_count() );
-#ifdef _DEBUG		
-		{
-			// if moveIndex = queue_get_count, it means that we are moving to the end of the list...			
-			PFC_ASSERT(0 <= moveIndex && moveIndex <= queueCount);
-			for(t_size i = 0; i < indicesToMove.get_count(); i++) {
-				PFC_ASSERT(0 <= indicesToMove[i] && indicesToMove[i] < static_api_ptr_t<playlist_manager>()->queue_get_count());
-			}
-		}
-#endif
-	
 		reorder_helpers::move_items_reordering(moveIndex, indicesToMove, newIndices, ordering, queueCount);
-			
+
 	}
 
 	/**
@@ -237,11 +224,9 @@ public:
 
 		for(t_size j = 0; j < dataSize; j++)
 		{
-	#ifdef _DEBUG			
-			const char* path = p_data[j]->get_path();
-			console::formatter() << path;
-	#endif	
+			//..
 			playlist_api->queue_add_item(p_data[j]);
+			//..
 		}
 		
 	}
