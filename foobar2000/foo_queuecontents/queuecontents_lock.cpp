@@ -161,13 +161,13 @@ void queuecontents_lock::install_lock() {
 }
 
 
-void queuecontents_lock::uninstall_lock() {	
+void queuecontents_lock::uninstall_lock() {
 	TRACK_CALL_TEXT("queuecontents_lock::uninstall_lock");
 	if(plLock != NULL) {
 		static_api_ptr_t<playlist_manager_v2> playlist_api;
 		t_size queuePlaylistIndex = find_playlist();
 		if(queuePlaylistIndex != pfc::infinite_size && playlist_api->playlist_lock_is_present(queuePlaylistIndex)) {
-			playlist_api->playlist_lock_uninstall(queuePlaylistIndex, plLock);			
+			playlist_api->playlist_lock_uninstall(queuePlaylistIndex, plLock);
 		}
 		plLock.release();
 	}

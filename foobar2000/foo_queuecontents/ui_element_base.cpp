@@ -117,6 +117,7 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 	window_manager::AddWindow(this);
 
 	inited_successfully = m_guiList.GetColumnCount();
+
 	DEBUG_PRINT << "ui_element_base::OnInitDialog. Inited successfully? " << inited_successfully;
 
 	// Save initial configuration which is read in the constructor (before this method!)

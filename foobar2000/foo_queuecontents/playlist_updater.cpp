@@ -28,9 +28,6 @@ void playlist_updater::Refresh(){
 	bit_array_bittable curSel(qSize);
 	playlist_api->playlist_get_selection_mask(queuePlaylistIndex, curSel);
 
-#ifdef _DEBUG
-	//console::formatter() << "Deletion and Insertion operations are now disabled.";
-#endif
 
 	//disable delete and insert triggers
 	queuecontents_lock::updateQueuePlaylist = false;	
@@ -39,9 +36,6 @@ void playlist_updater::Refresh(){
 	bool playlist_add_item_ok = playlist_api->playlist_add_items(queuePlaylistIndex, queue_metadbs, bit_array_true());
 	PFC_ASSERT( playlist_add_item_ok );
 
-#ifdef _DEBUG
-	//console::formatter() << "Deletion and Insertion operations are now enabled.";
-#endif
 
 	//restore delete and insert triggers
 	queuecontents_lock::updateQueuePlaylist = true;

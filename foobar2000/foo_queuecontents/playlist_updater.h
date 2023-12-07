@@ -8,5 +8,5 @@
 // class that responds to Refresh() function and updates the playlist to match queue contents
 class playlist_updater : public window_manager_window {
 public:
-	void Refresh();
+	virtual void Refresh() override;
 };

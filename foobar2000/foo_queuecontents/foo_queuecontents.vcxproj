@@ -92,7 +92,7 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.;..;../..;$(WTL_PATH);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;../..;$(WTL_PATH);jansson%;</AdditionalIncludeDirectories>
       <StringPooling>false</StringPooling>
       <FloatingPointModel>Fast</FloatingPointModel>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -107,7 +107,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>../shared/shared-$(Platform).lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../shared/shared-$(Platform).lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;$(SolutionDir)$(Platform)\$(Configuration)\jansson.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(FOO_COMP_WD)" &amp; copy "$(TargetPath)" "$(FOO_COMP_WD)"</Command>
@@ -125,7 +125,7 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.;..;../..;$(WTL_PATH);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;../..;$(WTL_PATH);jansson</AdditionalIncludeDirectories>
       <StringPooling>false</StringPooling>
       <FloatingPointModel>Fast</FloatingPointModel>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -139,7 +139,7 @@
       </DataExecutionPrevention>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>../shared/shared-$(Platform).lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../shared/shared-$(Platform).lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;$(SolutionDir)$(Platform)\$(Configuration)\jansson.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(FOO_COMP_WD)" &amp; copy "$(TargetPath)" "$(FOO_COMP_WD)"</Command>
@@ -154,7 +154,7 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.;..;../..;$(WTL_PATH);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;../..;$(WTL_PATH);jansson</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -182,7 +182,7 @@
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.;..;../..;$(WTL_PATH);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..;../..;$(WTL_PATH);jansson</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -202,6 +202,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\foo_vbookmark\IBookmark.cpp" />
     <ClCompile Include="queue_list_control.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="dui_element.cpp" />
@@ -215,6 +216,7 @@
     <ClCompile Include="queuecontents_lock.cpp" />
     <ClCompile Include="queuecontents_queue_callback.cpp" />
     <ClCompile Include="queue_list_control_ILO.cpp" />
+    <ClCompile Include="queue_persistence.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -227,6 +229,7 @@
     <ClCompile Include="window_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\foo_vbookmark\IBookmark.h" />
     <ClInclude Include="queue_list_control.h" />
     <ClInclude Include="cfg_objMapWithDefault.h" />
     <ClInclude Include="config.h" />
@@ -242,9 +245,13 @@
     <ClInclude Include="queuecontents_lock.h" />
     <ClInclude Include="queue_helpers.h" />
     <ClInclude Include="queue_list_control_ILO.h" />
+    <ClInclude Include="queue_persistence.h" />
     <ClInclude Include="reorder_helpers.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="style_manager.h" />
+    <ClInclude Include="style_manager_cui.h" />
+    <ClInclude Include="style_manager_dui.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="uie_element.h" />
     <ClInclude Include="ui_element_base.h" />
@@ -270,6 +277,9 @@
     </ProjectReference>
     <ProjectReference Include="..\foobar2000_component_client\foobar2000_component_client.vcxproj">
       <Project>{71ad2674-065b-48f5-b8b0-e1f9d3892081}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\foo_vbookmark libs\jansson-2.14\build\jansson.vcxproj">
+      <Project>{a0033952-f97c-3594-a9a1-4abaf51af144}</Project>
     </ProjectReference>
     <ProjectReference Include="..\helpers\foobar2000_sdk_helpers.vcxproj">
       <Project>{ee47764e-a202-4f85-a767-abdab4aff35f}</Project>

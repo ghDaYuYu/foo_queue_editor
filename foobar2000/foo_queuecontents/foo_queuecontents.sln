@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libPPUI", "..\..\libPPUI\li
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pfc", "..\..\pfc\pfc.vcxproj", "{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jansson", "..\foo_queuecontents libs\jansson-2.14\build\jansson.vcxproj", "{A0033952-F97C-3594-A9A1-4ABAF51AF144}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug FB2K|Win32 = Debug FB2K|Win32
@@ -213,6 +215,30 @@ Global
 		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Release|x64.Build.0 = Release FB2K|x64
 		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Release|x86.ActiveCfg = Release FB2K|Win32
 		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Release|x86.Build.0 = Release FB2K|Win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug FB2K|Win32.ActiveCfg = Debug|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug FB2K|Win32.Build.0 = Debug|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug FB2K|x64.ActiveCfg = Debug|x64
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug FB2K|x64.Build.0 = Debug|x64
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug FB2K|x86.ActiveCfg = Debug|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug FB2K|x86.Build.0 = Debug|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug|Win32.ActiveCfg = Debug|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug|Win32.Build.0 = Debug|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug|x64.ActiveCfg = Debug|x64
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug|x64.Build.0 = Debug|x64
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug|x86.ActiveCfg = Debug|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Debug|x86.Build.0 = Debug|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release FB2K|Win32.ActiveCfg = RelWithDebInfo|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release FB2K|Win32.Build.0 = RelWithDebInfo|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release FB2K|x64.ActiveCfg = RelWithDebInfo|x64
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release FB2K|x64.Build.0 = RelWithDebInfo|x64
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release FB2K|x86.ActiveCfg = RelWithDebInfo|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release FB2K|x86.Build.0 = RelWithDebInfo|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release|Win32.ActiveCfg = Release|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release|Win32.Build.0 = Release|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release|x64.ActiveCfg = Release|x64
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release|x64.Build.0 = Release|x64
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release|x86.ActiveCfg = Release|win32
+		{A0033952-F97C-3594-A9A1-4ABAF51AF144}.Release|x86.Build.0 = Release|win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

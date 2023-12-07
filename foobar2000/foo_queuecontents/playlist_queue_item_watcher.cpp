@@ -107,7 +107,7 @@ void playlist_queue_item_watcher::on_playlists_removed(const bit_array & p_mask,
 
 void playlist_queue_item_watcher::on_playlist_renamed(t_size p_index,const char * p_new_name,t_size p_new_name_len) {
 	TRACK_CALL_TEXT("playlist_queue_item_watcher::on_playlist_renamed");
-	if(invalidated) return;	
+	if(invalidated) return;
 	if(watched_items.have_item(p_index)) {
 		DEBUG_PRINT << "playlist_queue_item_watcher::on_playlist_renamed: playlist " << p_index << " has been renamed.";
 		invalidated = true;

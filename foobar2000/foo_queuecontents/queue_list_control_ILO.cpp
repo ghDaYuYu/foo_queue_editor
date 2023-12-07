@@ -205,11 +205,59 @@ namespace dlg {
 	//todo
 	void ILOD_QueueSource::listOnDrop(ctx_t ctx, IDataObject* obj, CPoint pt) {
 
+		//todo: bookmark copy/paste
+		//bool b_from_ibom = CPoint(-1, -1) == pt;
+
 		DEBUG_PRINT << "listOnDrop";
+
+		std::vector<GUID> v_ibom_guids;
+
+		if (ibom::IBom::isBookmarkDeco(obj)) {
+
+			ibom::IBom* pBookmarkDataObject = static_cast<ibom::IBom*>(obj);
+			if (pBookmarkDataObject) {
+				try {
+
+					LPSAFEARRAY lpSafeArray = pBookmarkDataObject->GetPlaylistGuids();
+
+					LONG /*lBound,*/ uBound;
+					//SafeArrayGetLBound(lpSafeArray, 1, &lBound);
+					SafeArrayGetUBound(lpSafeArray, 1, &uBound);
+					LONG count = uBound + 1;
+
+					BSTR* raw;
+					SafeArrayAccessData(lpSafeArray, (void**)&raw);
+
+					std::vector<std::wstring> v(raw, raw + count);
+
+					pfc::stringcvt::string_utf8_from_wide temp;
+					for (const auto w : v) {
+						//todo: rev bookmark guid types
+						temp.convert(w.data(), w.size());
+						GUID guid = pfc::GUID_from_text(temp.get_ptr());
+						v_ibom_guids.emplace_back(std::move(guid));
+					}
+
+					SafeArrayUnaccessData(lpSafeArray);
+				}
+				catch (...) {
+					//..
+				}
+			}
+		}
+		else {
+			//..
+		}
 
 		CListControlQueue* plc = (CListControlQueue*)(ctx);
 
-		plc->SetLastDDMark();
+		//todo: bookmark copy/paste
+		if (b_from_ibom) {
+			plc->SetLastDDMarkIbom();
+		}
+		else {
+			plc->SetLastDDMark();
+		}
 
 		ActivePlaylistInformation dron_playlist_state;
 		if (GetActivePlaylistState(dron_playlist_state)) {
