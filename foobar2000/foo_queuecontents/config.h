@@ -26,6 +26,16 @@ static const t_int COLUMN_ALIGNMENT_LEFT = LVCFMT_LEFT;
 static const t_int COLUMN_ALIGNMENT_CENTER = LVCFMT_CENTER;
 static const t_int COLUMN_ALIGNMENT_RIGHT = LVCFMT_RIGHT;
 
+
+
+// {B2AA15B4-4F6B-495A-B45C-C5ADAEE863FB}
+static const GUID guid_cfg_show_header =
+{ 0xb2aa15b4, 0x4f6b, 0x495a, { 0xb4, 0x5c, 0xc5, 0xad, 0xae, 0xe8, 0x63, 0xfb } }; //new
+
+// {816465C4-2B6B-4556-A7F6-C7AA9179DECA}
+static const GUID guid_cfg_save_quit =
+{ 0x816465c4, 0x2b6b, 0x4556, { 0xa7, 0xf6, 0xc7, 0xaa, 0x91, 0x79, 0xde, 0xca } };
+
 // {3526DFD2-C5DB-4541-96BE-B4F99FE06C07}
 static const GUID guid_cfg_playlist_enabled =
 { 0x3526dfd2, 0xc5db, 0x4541, { 0x96, 0xbe, 0xb4, 0xf9, 0x9f, 0xe0, 0x6c, 0x7 } }; //mod
@@ -43,6 +53,8 @@ static const GUID guid_cfg_playlist_name =
 static const GUID guid_cfg_ui_columns =
 { 0xf5da3648, 0x8655, 0x43f9, { 0xbc, 0x69, 0x67, 0xc7, 0xe5, 0x6e, 0x57, 0x4d } }; //mod
 
+static const bool default_cfg_save_quit = false;
+static const bool default_cfg_show_header = true;
 static const int default_cfg_playlist_enabled = 0;
 static const char* default_cfg_playlist_name = "Queue";
 
@@ -59,6 +71,8 @@ static t_storage_impl<long, ui_column_definition> default_cfg_ui_columns[] = {
 	t_storage_impl<long, ui_column_definition>::create(8, ui_column_definition(pfc::string8("Playlist"), pfc::string8("$if2(%playlist_name%,)"), COLUMN_ALIGNMENT_LEFT))
 };
 
+extern cfg_var_legacy::cfg_bool cfg_show_header;
+extern cfg_var_legacy::cfg_bool cfg_save_quit;
 extern cfg_var_legacy::cfg_string cfg_playlist_name;
 extern cfg_var_legacy::cfg_bool cfg_playlist_enabled;
 

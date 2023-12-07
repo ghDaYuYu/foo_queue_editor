@@ -79,7 +79,8 @@ private:
 	LRESULT on_message(HWND wnd, UINT msg, WPARAM wp, LPARAM lp);
 public:
 	// ui_element_base
-	virtual void RefreshVisuals() ;
+	virtual void RefreshVisuals();
+	virtual void HideHeader();
 	virtual void save_configuration();
 	virtual HWND get_wnd();
 	HWND get_wnd() const;

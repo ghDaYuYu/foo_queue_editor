@@ -49,11 +49,44 @@ protected:
 	
 	// Implementors: call listview's SetColors and SetFont.
 	// Base implementation updates component border.
+	virtual void HideHeader();
+	
 	virtual void RefreshVisuals();
 	// when window dies
 	virtual void OnFinalMessage(HWND /*hWnd*/);
 
 	//todo: style manager
+	void toggleHeader(HWND parent);
+
+	void on_style_change(bool repaint = true) {
+
+		if (m_guiList.IsHeaderEnabled()) {
+			const LOGFONT lfh = m_cust_stylemanager->getTitleFont();
+			HFONT hOldFontHeader = m_guiList.GetHeaderCtrl().GetFont();
+			HFONT hFontHeader = CreateFontIndirect(&lfh);
+			m_guiList.SetHeaderFont(hFontHeader);
+			//todo: rev already managed (CFont)?
+			if (hOldFontHeader != hFontHeader) {
+				//todo: leak? rev crash show/hide header...
+				//::DeleteObject(hOldFontHeader);
+			}
+		}
+
+		const LOGFONT lf = m_cust_stylemanager->getListFont();
+		HFONT hOldFont = m_guiList.GetFont();
+		HFONT hFont = CreateFontIndirect(&lf);
+		m_guiList.SetFont(hFont);
+
+		if (hOldFont != hFont) {
+			//todo: leak or managed CFontHandle?
+			//::DeleteObject(hOldFont);
+		}
+
+		if (repaint) {
+			m_guiList.Invalidate();
+		}
+	}
+
 	void setBorderStyle() {
 		if (is_dui()) {
 			::SetWindowLongPtr(/*get_wnd()*/m_guiList, GWL_EXSTYLE, 0);

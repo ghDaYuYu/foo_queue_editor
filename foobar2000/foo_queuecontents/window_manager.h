@@ -10,6 +10,7 @@ public:
 	virtual void PrefColumnsChanged(bool reset = false) {}
 	virtual void PrefColumnsChanged(pfc::map_t<long, ui_column_definition> old_ui_col_defs) {}
 	virtual void RefreshVisuals() {}
+	virtual void HideHeader() {}
 };
 
 class window_manager
@@ -33,6 +34,7 @@ public:
 	static void UIColumnsChanged(pfc::map_t<long, ui_column_definition> modded_ui_col_defs);
 	static void SaveUILayout();
 	static void VisualsChanged();
+	static void HideUIHeader();
 };
 
 class global_refresh_callback : public main_thread_callback

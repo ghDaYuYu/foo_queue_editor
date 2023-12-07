@@ -115,12 +115,15 @@ public:
 		COMMAND_HANDLER_EX(IDC_UI_FORMAT, EN_CHANGE, OnEditChange)
 		COMMAND_HANDLER_EX(IDC_PLAYLIST_ENABLED, EN_CHANGE, OnEditChange)
 		COMMAND_HANDLER_EX(IDC_PLAYLIST_NAME, EN_CHANGE, OnEditChange)
+		COMMAND_HANDLER(IDC_SAVE_QUIT, BN_CLICKED, OnBnClickedEnabled)
+		COMMAND_HANDLER(IDC_HEADER_ENABLED, BN_CLICKED, OnBnClickedEnabled)
 		COMMAND_HANDLER(IDC_PLAYLIST_ENABLED, BN_CLICKED, OnBnClickedPlaylistEnabled)
 		COMMAND_HANDLER(IDC_BUTTON_ADD_COLUMN, BN_CLICKED, OnBnClickedButtonAddColumn)
 		REFLECT_NOTIFICATIONS()
 	END_MSG_MAP()
 
 public:
+	LRESULT OnBnClickedEnabled(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedPlaylistEnabled(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedButtonAddColumn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 

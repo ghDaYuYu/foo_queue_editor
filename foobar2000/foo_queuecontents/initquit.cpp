@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "config.h"
+#include "queue_persistence.h"
 #include "initquit.h"
 
 void queuecontents_initquit::on_init() 
@@ -12,6 +13,11 @@ void queuecontents_initquit::on_init()
 }
 
 void queuecontents_initquit::on_quit() {
+
+	if (cfg_save_quit) {
+		queue_persistence qp;
+		qp.writeDataFile();
+	}
 
 	queuecontents_lock::uninstall_lock();
 	watcher.release();

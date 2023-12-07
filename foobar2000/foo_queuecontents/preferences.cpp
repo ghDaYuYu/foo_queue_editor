@@ -38,6 +38,8 @@ BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 
 	m_disable_on_change = true;
 
+	CheckDlgButton(IDC_HEADER_ENABLED, cfg_show_header ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_SAVE_QUIT, cfg_save_quit ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, cfg_playlist_name);
 
@@ -180,6 +182,8 @@ void CMyPreferences::reset() {
 
 	m_disable_on_change = true;
 
+	CheckDlgButton(IDC_HEADER_ENABLED, default_cfg_show_header ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_SAVE_QUIT, default_cfg_save_quit ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, default_cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, default_cfg_playlist_name);
 	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(default_cfg_playlist_enabled);
@@ -213,6 +217,19 @@ void CMyPreferences::reset() {
 }
 
 void CMyPreferences::apply() {
+
+	bool bSavedUILayout = false;
+
+	bool old_show_header = cfg_show_header;
+	cfg_show_header = IsDlgButtonChecked(IDC_HEADER_ENABLED) == BST_CHECKED;
+
+	if (old_show_header != cfg_show_header) {
+		bSavedUILayout = true;
+		window_manager::SaveUILayout();
+		window_manager::HideUIHeader();
+	}
+
+	cfg_save_quit = IsDlgButtonChecked(IDC_HEADER_ENABLED) == BST_CHECKED;
 
 	pfc::string8 playlist_name;
 	cfg_playlist_enabled = IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED;
@@ -324,6 +341,12 @@ bool CMyPreferences::HasChanged() {
 
 	m_columns_dirty = false;
 
+	bool header_enabled = (IsDlgButtonChecked(IDC_HEADER_ENABLED) == BST_CHECKED) != 0;
+	bool bshow_header_changed = header_enabled != cfg_show_header;
+
+	bool bsave_quit_enabled = (IsDlgButtonChecked(IDC_SAVE_QUIT) == BST_CHECKED) != 0;
+	bool bsave_quit_changed = bsave_quit_enabled != cfg_save_quit;
+
 	pfc::string8 playlist_name;
 	pfc::string8 ui_format;
 
@@ -358,12 +381,18 @@ bool CMyPreferences::HasChanged() {
 	//(whether the apply button should be enabled or not)
 	return (playlist_enabled != playlist_enabled_cfg )
 		|| (playlist_name != cfg_playlist_name)
-		|| m_columns_dirty;
+		|| m_columns_dirty || bshow_header_changed || bsave_quit_changed;
 }
 
 void CMyPreferences::OnChanged() {
 	//refresh the apply button state
 	m_callback->on_state_changed();
+}
+
+LRESULT CMyPreferences::OnBnClickedEnabled(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	OnChanged();
+	return 0;
 }
 
 LRESULT CMyPreferences::OnBnClickedPlaylistEnabled(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)

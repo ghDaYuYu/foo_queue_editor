@@ -84,6 +84,16 @@ void window_manager::GlobalRefresh()
 	updates_enabled = true;
 }
 
+void window_manager::HideUIHeader() {
+	std::list<window_manager_window*> windowList = GetWindowList();
+	std::list<window_manager_window*>::iterator Iter;
+
+	for (Iter = windowList.begin(); Iter != windowList.end(); Iter++)
+	{
+		(*Iter)->HideHeader();
+	}
+}
+
 void window_manager::SaveUILayout() {
 	TRACK_CALL_TEXT("window_manager::SaveUILayout");
 

@@ -274,7 +274,7 @@ namespace dlg {
 		void CommandHeaderContextMenu(unsigned p_id, unsigned p_id_base, CPoint point);
 		void CommandContextMenu(CPoint screen_point, unsigned p_id, unsigned p_id_base);
 
-		void AppendFrameStyleMenuItems(CMenuHandle menu, unsigned p_id_base, CPoint point);
+		bool AppendFrameStyleMenuItems(CMenuHandle menu, unsigned p_id_base, CPoint point);
 		void BuildHeaderContextMenu(CMenuHandle menu, unsigned p_id_base, CPoint point);
 		void BuildListItemContextMenu(CMenuHandle menu, unsigned p_id_base, CPoint point);
 		void BuildListNoItemContextMenu(CMenuHandle menu, unsigned p_id_base, CPoint point);
@@ -311,8 +311,6 @@ namespace dlg {
 		metadb_handle_list_ref GetAllMetadbs() { return m_metadbs; }
 
 		void GetSelectedItemsMetaDbHandles(metadb_handle_list_ref p_out);
-
-		void EditModeContextMenuGetFocusPoint(CPoint& pt);
 
 		void OnContextMenu(CWindow wnd, CPoint point);
 
@@ -700,6 +698,16 @@ namespace dlg {
 		}
 
 	protected:
+
+		virtual int GroupHeaderFontWeight(int origVal) const override {
+
+			if (cfg_show_header) {
+				return origVal;
+			}
+			else {
+				return 0;
+			}
+		}
 
 		virtual void OnColumnHeaderClick(t_size index) override {
 			//..

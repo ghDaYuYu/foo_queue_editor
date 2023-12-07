@@ -6,8 +6,75 @@ void ui_element_base::InvalidateWnd() {
 	// Since listview control fills the whole space we might just as
 	// well invalidate that instead of the container window
 
-	//todo: rev comment
-	::InvalidateRect(get_wnd()/*m_guiList*/, NULL, TRUE);
+	::InvalidateRect(/*get_wnd()*/m_guiList, NULL, TRUE);
+}
+
+void ui_element_base::toggleHeader(HWND parent) {
+
+	//window_manager::EnableUpdates(false);
+
+	CWindow cWndParent(parent);
+	CRect client; cWndParent.GetClientRect(client);
+
+	CRect rcList;
+	m_guiList.GetClientRect(&rcList);
+	auto hwndCurrrent = cWndParent.GetDlgItem(IDC_QUEUELIST);
+
+	CRect rcHeader;
+	WINDOWPOS wPos = {};
+	HDLAYOUT layout = { &rcHeader, &wPos };
+	bool getlayout = m_guiList.GetHeaderCtrl().Layout(&layout);
+
+	bool hadHeader = getlayout && wPos.cy > 0;
+
+	if (hadHeader == cfg_show_header) {
+		//nothing to do
+		return;
+	}
+
+	//::EnableWindow(m_guiList.m_hWnd, false);
+
+	m_guiList.DestroyWindow();
+
+	HWND newwnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("listbox"),
+		_T("queue listbox"),
+		WS_CHILD | WS_VISIBLE | LBS_NOTIFY,
+		client.left, client.top, client.right, client.bottom,
+		cWndParent, 0,
+		core_api::get_my_instance(), 0);
+
+	on_style_change(false);
+
+	cWndParent.SetFont(m_guiList.GetFont());
+
+	m_guiList.CreateInDialog(cWndParent, IDC_QUEUELIST, newwnd);
+
+	ClearDark();
+	m_dark.AddDialogWithControls(parent);
+
+	CRect rc_header;
+	
+	if (cfg_show_header) {
+		m_guiList.InitializeHeaderCtrl(HDS_DRAGDROP | HDS_BUTTONS);
+	}
+	else {
+		m_guiList.InitializeHeaderCtrl(HDS_HIDDEN);
+	}
+	
+	m_guiList.SetPlaylistStyle();
+	m_guiList.SetWantReturn(true);
+
+	setBorderStyle();
+
+	// todo: CUI test not working?
+	// Update is needed to refresh border, see Remarks from http://msdn.microsoft.com/en-us/library/aa931583.aspx
+	SetWindowPos(get_wnd(), 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+	on_style_change(true);
+
+	m_guiList.SetHost(this);
+	m_guiList.BuildColumns(true);
+	m_guiList.Invalidate(true);
 }
 
 BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
@@ -17,6 +84,15 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 
 	// wnd parameter 'overrides' get_wnd if it is set
 	HWND parent = (wnd != NULL) ? wnd : get_wnd();
+
+	m_guiList.CreateInDialog(parent, IDC_QUEUELIST);
+
+	if (cfg_show_header) {
+		m_guiList.InitializeHeaderCtrl(HDS_DRAGDROP | HDS_BUTTONS);
+	}
+	else {
+		m_guiList.InitializeHeaderCtrl(HDS_HIDDEN);
+	}
 
 	m_dark.AddDialogWithControls(parent);
 
@@ -152,6 +228,10 @@ void ui_element_base::PrefColumnsChanged(pfc::map_t<long, ui_column_definition> 
 // list control to m_columns
 void ui_element_base::GetLayout() {
 	m_guiList.GetCurrentColumnLayout();
+}
+
+void ui_element_base::HideHeader() {
+	toggleHeader(get_wnd());
 }
 
 void ui_element_base::RefreshVisuals() {

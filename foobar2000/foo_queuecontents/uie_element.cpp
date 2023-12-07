@@ -17,6 +17,11 @@ bool uie_element::is_dui() {
 	return false;
 }
 
+void uie_element::HideHeader() {
+
+	toggleHeader(get_wnd());
+}
+
 void uie_element::RefreshVisuals() {
 	TRACK_CALL_TEXT("uie_element::RefreshVisuals");
 	ui_element_base::RefreshVisuals();

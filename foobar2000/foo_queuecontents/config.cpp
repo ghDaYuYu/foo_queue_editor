@@ -2,7 +2,9 @@
 #include "config.h"
 
 using namespace cfg_var_legacy;
-//todo: ambiguous?
+
+cfg_var_legacy::cfg_bool cfg_show_header(guid_cfg_show_header, default_cfg_show_header);
+cfg_var_legacy::cfg_bool cfg_save_quit(guid_cfg_save_quit, default_cfg_save_quit);
 cfg_var_legacy::cfg_string cfg_playlist_name(guid_cfg_playlist_name, default_cfg_playlist_name);
 cfg_var_legacy::cfg_bool cfg_playlist_enabled(guid_cfg_playlist_enabled, default_cfg_playlist_enabled);
 cfg_objMapWithDefault< pfc::map_t<long, ui_column_definition> > cfg_ui_columns(guid_cfg_ui_columns, default_cfg_ui_columns);
