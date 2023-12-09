@@ -39,6 +39,7 @@ BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 	m_disable_on_change = true;
 
 	CheckDlgButton(IDC_HEADER_ENABLED, cfg_show_header ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_LOAD_INIT, cfg_load_init ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_SAVE_QUIT, cfg_save_quit ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, cfg_playlist_name);
@@ -103,16 +104,15 @@ void CMyPreferences::OnContextMenu(CWindow wnd, CPoint point) {
 
 			switch (cmd) {
 			case HDF_LEFT:
+			[[walkthrought]]
 			case HDF_RIGHT:
 			[[walkthrought]]
 			case HDF_CENTER: {
 			[[walkthrought]]
-
 				size_t n = selmask.find_first(true, 0, selmask.size());
 				for (n; n < selmask.size(); n = selmask.find_next(true, n, selmask.size())) {
 					data.at(n).alignment = cmd;
 				}
-
 				m_field_list.ReloadItems(selmask);
 				OnChanged();
 				break;
@@ -183,7 +183,10 @@ void CMyPreferences::reset() {
 	m_disable_on_change = true;
 
 	CheckDlgButton(IDC_HEADER_ENABLED, default_cfg_show_header ? BST_CHECKED : BST_UNCHECKED);
+
+	CheckDlgButton(IDC_LOAD_INIT, default_cfg_load_init ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_SAVE_QUIT, default_cfg_save_quit ? BST_CHECKED : BST_UNCHECKED);
+
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, default_cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, default_cfg_playlist_name);
 	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(default_cfg_playlist_enabled);
@@ -229,7 +232,8 @@ void CMyPreferences::apply() {
 		window_manager::HideUIHeader();
 	}
 
-	cfg_save_quit = IsDlgButtonChecked(IDC_HEADER_ENABLED) == BST_CHECKED;
+	cfg_load_init = IsDlgButtonChecked(IDC_LOAD_INIT) == BST_CHECKED;
+	cfg_save_quit = IsDlgButtonChecked(IDC_SAVE_QUIT) == BST_CHECKED;
 
 	pfc::string8 playlist_name;
 	cfg_playlist_enabled = IsDlgButtonChecked(IDC_PLAYLIST_ENABLED) == BST_CHECKED;
@@ -347,6 +351,8 @@ bool CMyPreferences::HasChanged() {
 	bool header_enabled = (IsDlgButtonChecked(IDC_HEADER_ENABLED) == BST_CHECKED) != 0;
 	bool bshow_header_changed = header_enabled != cfg_show_header;
 
+	bool bload_init_enabled = (IsDlgButtonChecked(IDC_LOAD_INIT) == BST_CHECKED) != 0;
+	bool bload_init_changed = bload_init_enabled != cfg_load_init;
 	bool bsave_quit_enabled = (IsDlgButtonChecked(IDC_SAVE_QUIT) == BST_CHECKED) != 0;
 	bool bsave_quit_changed = bsave_quit_enabled != cfg_save_quit;
 
@@ -384,7 +390,8 @@ bool CMyPreferences::HasChanged() {
 	//(whether the apply button should be enabled or not)
 	return (playlist_enabled != playlist_enabled_cfg )
 		|| (playlist_name != cfg_playlist_name)
-		|| m_columns_dirty || bshow_header_changed || bsave_quit_changed;
+		|| m_columns_dirty || bshow_header_changed
+		|| bsave_quit_changed || bload_init_changed;
 }
 
 void CMyPreferences::OnChanged() {

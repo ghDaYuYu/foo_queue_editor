@@ -4,6 +4,7 @@
 using namespace cfg_var_legacy;
 
 cfg_var_legacy::cfg_bool cfg_show_header(guid_cfg_show_header, default_cfg_show_header);
+cfg_var_legacy::cfg_bool cfg_load_init(guid_cfg_load_init, default_cfg_load_init);
 cfg_var_legacy::cfg_bool cfg_save_quit(guid_cfg_save_quit, default_cfg_save_quit);
 cfg_var_legacy::cfg_string cfg_playlist_name(guid_cfg_playlist_name, default_cfg_playlist_name);
 cfg_var_legacy::cfg_bool cfg_playlist_enabled(guid_cfg_playlist_enabled, default_cfg_playlist_enabled);

@@ -16,5 +16,3 @@ public:
 private:
 	pfc::ptrholder_t<playlist_queue_item_watcher> watcher;
 };
-
-static initquit_factory_t<queuecontents_initquit> initquitter;
