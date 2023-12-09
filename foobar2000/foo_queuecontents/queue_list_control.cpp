@@ -10,44 +10,33 @@
 namespace dlg {
 
 	enum {
-		//ID_RESERVED = 1,
-		ID_PREFERENCES = 2,
-		ID_BEGIN_CUSTOM,
-	};
 
-	// Items context menu
-	enum {
-		ID_REMOVE = ID_BEGIN_CUSTOM,
+		//ID_SHOW_COLUMN_HEADER = 1,
+		ID_PREFERENCES = 2,
+		ID_REMOVE,
 		ID_COPY,
+		ID_PROPERTIES,
+
 		ID_PL_SEND_TO_CURRENT,
 		ID_PL_ADD_TO_CURRENT,
 		ID_PL_SEND_NEW,
-		ID_QUEUE_PERSIST_SUBMENU,
+		ID_SUBMENU_COLUMNS,
+		ID_SUBMENU_QUEUE_PERSIST,
 		ID_QUEUE_SAVE,
 		ID_QUEUE_RESTORE,
-		ID_PROPERTIES,
-		// ID for "Move to Top" and 
+
 		ID_MOVE_TOP,
-		// ID for "Move to Bottom"
 		ID_MOVE_BOTTOM,
-		// ID for "Move to Bottom"
 
-		// The range ID_CONTEXT_FIRST through ID_CONTEXT_LAST is reserved
-		// for menu entries from menu_manager.
-		// ID_CONTEXT_FIRST,
-		// ID_CONTEXT_LAST = ID_CONTEXT_FIRST + 1000,
-	};
+		// Reserved 1000 -> 1099 to columns
+		ID_COLUMNS_FIRST = 1000,
+		ID_COLUMNS_LAST = ID_COLUMNS_FIRST + 99,
 
-	// Header item context menu
-	enum {
-		// Reserved for columns
-		ID_COLUMNS_FIRST = ID_BEGIN_CUSTOM,
-		// Reserved for columns
-		ID_COLUMNS_LAST = ID_COLUMNS_FIRST + 1000,
-		ID_RELATIVE_WIDTHS = ID_COLUMNS_LAST + 2, // "Auto-scale Columns with Window Size"
-		ID_BORDER_NONE = ID_COLUMNS_LAST + 3,
-		ID_BORDER_GREY = ID_COLUMNS_LAST + 4,
-		ID_BORDER_SUNKEN = ID_COLUMNS_LAST + 5,
+		ID_RELATIVE_WIDTHS,
+
+		ID_BORDER_NONE,
+		ID_BORDER_GREY,
+		ID_BORDER_SUNKEN,
 		ID_RESET_HEADER,
 	};
 
@@ -71,13 +60,13 @@ namespace dlg {
 		unsigned p_base_id = 0;
 
 		CMenuHandle menuhandle(menu);
-		BuildContextMenu(point, menuhandle, p_base_id);
+		BuildContextMenu(point, menuhandle);
 
 		unsigned cmd = TrackPopupMenu(menu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_RIGHTBUTTON,
 			point.x, point.y, 0, *this, 0);
 
 
-		CommandContextMenu(point, cmd, p_base_id);
+		CommandContextMenu(point, cmd);
 
 	}
 
@@ -197,7 +186,9 @@ namespace dlg {
 	}
 
 	void CListControlQueue::Add_PQI_List_Column(pfc::list_t<t_playback_queue_item> lpqi, t_size col_ndx) {
+
 		TRACK_CALL_TEXT("CListControlQueue::AddItems - column overload");
+
 		t_size count = lpqi.get_count();
 
 		for (t_size i = 0; i < count; i++) {
@@ -217,6 +208,7 @@ namespace dlg {
 	}
 
 	void CListControlQueue::Add_PQI_Item(t_playback_queue_item pqi, t_size qpos) {
+
 		TRACK_CALL_TEXT("CListControlQueue::AddItem");
 		PFC_ASSERT(m_ui_host != NULL);
 
@@ -232,6 +224,7 @@ namespace dlg {
 	}
 
 	void CListControlQueue::Add_PQI_SubItem(t_playback_queue_item pqi, /*1base*/t_size qpos, t_size col_ndx) {
+
 		TRACK_CALL_TEXT("CListControlQueue::AddItem - column overload");
 
 		PFC_ASSERT(m_ui_host != NULL);
@@ -287,228 +280,57 @@ namespace dlg {
 		}
 	}
 
+	void GetQueueMetaSelection(metadb_handle_list_ref& out, CListControlQueue* l) {
+		static_api_ptr_t<playlist_manager_v5> playlist_api;
+		pfc::list_t<t_playback_queue_item> queue;
+		playlist_api->queue_get_contents(queue);
+		pfc::list_t<t_playback_queue_item> queue_sel_items;
+		queue.get_items_mask(queue_sel_items, l->GetSelectionMask());
 
-	void CListControlQueue::BuildContextMenu(CPoint screen_point, CMenuHandle menu, unsigned p_id_base) {
+		for (auto w : queue_sel_items) {
+			out.add_item(w.m_handle);
+		}
+
+		queue.remove_all();
+		queue_sel_items.remove_all();
+	}
+
+	void CListControlQueue::BuildContextMenu(CPoint screen_point, CMenuHandle menu) {
 
 		ui_element_settings* settings;
 		m_ui_host->get_configuration(&settings);
 
 		CRect headerRect;
-		//if (settings->m_show_column_header) {
-			GetHeaderCtrl().GetClientRect(headerRect);
-			GetHeaderCtrl().ClientToScreen(headerRect);
-		//}
+		GetHeaderCtrl().GetClientRect(headerRect);
+		GetHeaderCtrl().ClientToScreen(headerRect);
 
-		if (headerRect.PtInRect(screen_point) || !settings->m_columns.get_count()) {
-			BuildHeaderContextMenu(menu, p_id_base, screen_point);
+		bool header_hit = headerRect.PtInRect(screen_point);
+
+		if (header_hit || !settings->m_columns.get_count()) {
+			/*res =*/ bldMenuHeader(menu);
 		}
 		else {
+
 			CPoint pt(screen_point);
 			LVHITTESTINFO hitTestInfo;
 			ScreenToClient(&pt);
 			hitTestInfo.pt = pt;
 
-			auto ht = AccItemHitTest(pt);
-			if (ht != SIZE_MAX) {
-				BuildListItemContextMenu(menu, p_id_base, pt);
+			if (AccItemHitTest(pt) != SIZE_MAX) {
+				/*res =*/ bldMenuListItems(menu);
 			}
 			else {
-				BuildListNoItemContextMenu(menu, p_id_base, screen_point);
+				/*res =*/ bldMenuNoItems(menu);
 			}
 		}
+		/*res =*/ bldMenuPrefProp(menu, header_hit);
 	}
 
-	void build_sub_menu(HMENU parent_menu, unsigned id_base, UINT submenu_id,TCHAR* wmenutitle, size_t count) {
-
-		HMENU submenu;
-		MENUITEMINFO submenu_info;
-		submenu = CreatePopupMenu();
-		submenu_info = { 0 };
-		submenu_info.cbSize = sizeof(MENUITEMINFO);
-		submenu_info.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
-		submenu_info.hSubMenu = submenu;
-		submenu_info.dwTypeData = wmenutitle;
-		submenu_info.wID = submenu_id;
-
-		uAppendMenu(submenu, MF_STRING, ID_QUEUE_SAVE + id_base, "Save");
-		uAppendMenu(submenu, MF_SEPARATOR, 0, "");
-		uAppendMenu(submenu, MF_STRING, ID_QUEUE_RESTORE + id_base, "Restore");
-		InsertMenuItem(parent_menu, submenu_id, false, &submenu_info);
-	}
-
-	void CListControlQueue::BuildListItemContextMenu(CMenuHandle menu, unsigned id_base, CPoint point) {
-
-		//AppendShowHeaderMenuItem(menu, ID_SHOW_COLUMN_HEADER + p_id_base);
-		AppendFrameStyleMenuItems(menu, id_base, point);
-
-		static_api_ptr_t<playlist_manager_v5> playlist_api;
-		bool active_fault = playlist_api->get_active_playlist() == SIZE_MAX;
-		active_fault |= playlist_api->playlist_lock_is_present(playlist_api->get_active_playlist());
-
-		pfc::list_t<t_playback_queue_item> queue;
-		playlist_api->queue_get_contents(queue);
-		t_size cq = queue.get_count();
-
-		if (menu.GetMenuItemCount()) {
-			menu.AppendMenu(MF_SEPARATOR);
-		}
-		menu.AppendMenu(MF_STRING, ID_REMOVE + id_base, _T("&Remove"));
-		menu.AppendMenu(MF_SEPARATOR);
-		menu.AppendMenu(MF_STRING, ID_MOVE_TOP + id_base, _T("Move to &top"));
-		menu.AppendMenu(MF_STRING, ID_MOVE_BOTTOM + id_base, _T("Move to &bottom"));
-		menu.AppendMenu(MF_SEPARATOR);
-		menu.AppendMenu(MF_STRING, ID_COPY + id_base, L"C&opy");
-		menu.AppendMenu(MF_SEPARATOR);
-		menu.AppendMenu(MF_STRING | (active_fault ? MF_DISABLED | MF_GRAYED : 0), ID_PL_SEND_TO_CURRENT + id_base, _T("&Send to Current Playlist"));
-		menu.AppendMenu(MF_STRING | (active_fault ? MF_DISABLED | MF_GRAYED : 0), ID_PL_ADD_TO_CURRENT + id_base, _T("&Add to Current Playlist"));
-		menu.AppendMenu(MF_STRING, ID_PL_SEND_NEW + id_base, _T("Send to& New Playlist"));
-		menu.AppendMenuW(MF_SEPARATOR);
-		build_sub_menu(menu, id_base, ID_QUEUE_PERSIST_SUBMENU + id_base, _T("Save and restore"), cq);
-		menu.AppendMenuW(MF_SEPARATOR);
-		menu.AppendMenuW(MF_STRING, ID_PREFERENCES + id_base, _T("Queue Editor &preferences..."));
-		menu.AppendMenuW(MF_SEPARATOR);
-		menu.AppendMenuW(MF_STRING, ID_PROPERTIES + id_base, _T("Properties"));
-
-	}
-
-	void CListControlQueue::BuildListNoItemContextMenu(CMenuHandle menu, unsigned id_base, CPoint point) {
-
-		if (AppendFrameStyleMenuItems(menu, id_base, point)) {
-			menu.AppendMenuW(MF_SEPARATOR);
-		}
-
-		build_sub_menu(menu, id_base, ID_QUEUE_PERSIST_SUBMENU + id_base, _T("Save and restore"),0);
-		menu.AppendMenuW(MF_SEPARATOR);
-
-		menu.AppendMenuW(MF_STRING, ID_PREFERENCES + id_base, _T("Queue Editor preferences..."));
-	}
-
-	bool CListControlQueue::AppendFrameStyleMenuItems(CMenuHandle menu, unsigned p_id_base, CPoint point) {
+	bool CListControlQueue::bldMenuHeader(CMenuHandle menu) {
 
 		ui_element_settings* settings;
 		m_ui_host->get_configuration(&settings);
 
-		// Add Frame Style sub menu if using CUI
-		if (!m_ui_host->is_dui()) {
-			CMenu frame_style_submenu;
-			frame_style_submenu.CreatePopupMenu();
-			menu.AppendMenuW(MF_STRING | MF_POPUP, frame_style_submenu.m_hMenu, _T("Frame style"));
-
-			// None
-			UINT non_checked = MFT_RADIOCHECK | (settings->m_border == 0 ? MF_CHECKED : MF_UNCHECKED);
-			frame_style_submenu.AppendMenuW(non_checked, ID_BORDER_NONE + p_id_base, _T("None"));
-
-			// Grey
-			UINT grey_checked = MFT_RADIOCHECK | (settings->m_border == WS_EX_STATICEDGE ? MF_CHECKED : MF_UNCHECKED);
-			frame_style_submenu.AppendMenuW(grey_checked, ID_BORDER_GREY + p_id_base, _T("Grey"));
-
-			// Sunken
-			UINT sunken_checked = MFT_RADIOCHECK | (settings->m_border == WS_EX_CLIENTEDGE ? MF_CHECKED : MF_UNCHECKED);
-			frame_style_submenu.AppendMenuW(sunken_checked, ID_BORDER_SUNKEN + p_id_base, _T("Sunken"));
-		}
-
-		return !m_ui_host->is_dui();
-	}
-
-	void CListControlQueue::CommandFrameStyleContextMenu(unsigned p_id, unsigned p_id_base, CPoint point) {
-
-		ui_element_settings* settings;
-		m_ui_host->get_configuration(&settings);
-
-		auto ori_val = settings->m_border;
-
-		if (p_id == ID_BORDER_NONE + p_id_base) {
-			settings->m_border = 0;
-		}
-		else if (p_id == ID_BORDER_GREY + p_id_base) {
-			settings->m_border = WS_EX_STATICEDGE;
-		}
-		else if (p_id == ID_BORDER_SUNKEN + p_id_base) {
-			settings->m_border = WS_EX_CLIENTEDGE;
-		}
-
-		if (ori_val != settings->m_border) {
-			m_ui_host->save_configuration();
-			// Refresh border
-			m_ui_host->RefreshVisuals();
-		}
-	}
-
-	void CListControlQueue::CommandHeaderContextMenu(unsigned cmd, unsigned id_base, CPoint point) {
-
-		ui_element_settings* settings;
-		m_ui_host->get_configuration(&settings);
-
-		if (cmd == ID_RESET_HEADER) {
-			ResetColumns();
-		}
-		else if (cmd == ID_PREFERENCES + id_base) {
-			static_api_ptr_t<ui_control>()->show_preferences(guid_preferences);
-		}
-		else if (cmd == ID_QUEUE_SAVE + id_base) {
-			queue_persistence qp;
-			qp.writeDataFile();
-		}
-		else if (cmd == ID_QUEUE_RESTORE + id_base) {
-			queue_persistence qp;
-			qp.readDataFileJSON();
-		}
-		else if (cmd == ID_RELATIVE_WIDTHS + id_base) {
-
-			settings->m_relative_column_widths = !settings->m_relative_column_widths;
-
-			// refresh layout...
-			for (int i = 0; i < GetColumnCount(); i++) {
-				if (settings->m_relative_column_widths) {
-					if (i == GetColumnCount() - 1) {
-						//set auto width
-						ResizeColumn(i, AUTO_FLAG, false);
-					}
-					else {
-						ResizeColumn(i, AUTO_FLAG, false);
-					}
-				}
-				else {
-					RelayoutUIColumns();
-					GetCurrentColumnLayout();
-					SendMessage(WM_SIZE, 0, MAKELPARAM(-1, -1));
-					break;
-				}
-			}
-
-			// Save configuration
-
-			m_ui_host->save_configuration();
-		}
-		else if (cmd >= ID_COLUMNS_FIRST + id_base && cmd <= ID_COLUMNS_LAST + id_base) {
-
-			long column_id = m_header_ctx_menu_field_ids[cmd - ID_COLUMNS_FIRST - id_base];
-			PFC_ASSERT(cfg_ui_columns.exists(column_id));
-
-
-			if (settings->column_exists(column_id)) {
-				RemoveUIHeaderColumn(column_id);
-			}
-			else {
-				AddUIHeaderColumn(column_id);
-			}
-		}
-		else {
-			if (!m_ui_host->is_dui()) {
-				CommandFrameStyleContextMenu(cmd, id_base, point);
-			}
-		}
-	}
-
-	void CListControlQueue::BuildHeaderContextMenu(CMenuHandle menu, unsigned id_base, CPoint point) {
-
-		ui_element_settings* settings;
-		m_ui_host->get_configuration(&settings);
-
-		// Show Header and Frame Style menu options //
-
-		//AppendShowHeaderMenuItem(menu, ID_SHOW_COLUMN_HEADER + id_base);
-		AppendFrameStyleMenuItems(menu, id_base, point);
 		if (menu.GetMenuItemCount()) {
 			menu.AppendMenu(MF_SEPARATOR);
 		}
@@ -529,114 +351,333 @@ namespace dlg {
 			}
 
 			m_header_ctx_menu_field_ids[ndx] = iter->m_key;
-
 			pfc::string8 field_name(iter->m_value.m_name);
-
 			//check m_columns
 			UINT checked = settings->column_exists(iter->m_key) ? MF_CHECKED : MF_UNCHECKED;
-			menu.AppendMenuW(checked, ID_COLUMNS_FIRST + ndx + id_base, pfc::stringcvt::string_os_from_utf8(field_name));
+			menu.AppendMenuW(checked, ID_COLUMNS_FIRST + ndx, pfc::stringcvt::string_os_from_utf8(field_name));
 			ndx++;
 		}
 		menu.AppendMenuW(MF_SEPARATOR);
-		menu.AppendMenuW(MF_STRING, ID_RESET_HEADER + id_base, _T("Reset header"));
-		menu.AppendMenuW(MF_SEPARATOR);
-
-		// Preferences //
-
-		menu.AppendMenuW(MF_STRING, ID_PREFERENCES + id_base, _T("Queue Editor preferences..."));
+		menu.AppendMenuW(MF_STRING, ID_RESET_HEADER, _T("Reset header"));
 		menu.AppendMenuW(MF_SEPARATOR);
 
 		// Dynamic column widths //
 
 		bool header_enabled = settings->m_show_column_header;
 		UINT relative_checked = settings->m_relative_column_widths ? MF_CHECKED : MF_UNCHECKED;
-		menu.AppendMenuW(relative_checked /*| (header_enabled ? 0 : MF_DISABLED | MF_GRAYED)*/, ID_RELATIVE_WIDTHS + id_base, _T("Auto-scale Columns with Window Size"));
+		menu.AppendMenuW(relative_checked, ID_RELATIVE_WIDTHS, _T("Auto-scale Columns with Window Size"));
+		return true;
 	}
 
-	void CListControlQueue::ShowHideColumnHeader() {
+	void CListControlQueue::build_sub_menu_save_restore(HMENU parent_menu, UINT submenu_id,TCHAR* wmenutitle) {
+
+		HMENU submenu;
+		MENUITEMINFO submenu_info;
+		submenu = CreatePopupMenu();
+		submenu_info = { 0 };
+		submenu_info.cbSize = sizeof(MENUITEMINFO);
+		submenu_info.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
+		submenu_info.hSubMenu = submenu;
+		submenu_info.dwTypeData = wmenutitle;
+		submenu_info.wID = submenu_id;
+
+		uAppendMenu(submenu, MF_STRING, ID_QUEUE_SAVE, "Save now");
+		uAppendMenu(submenu, MF_SEPARATOR, 0, "");
+		uAppendMenu(submenu, MF_STRING, ID_QUEUE_RESTORE, "Restore last");
+		InsertMenuItem(parent_menu, submenu_id, false, &submenu_info);
+	}
+
+	void CListControlQueue::build_sub_menu_columns(HMENU parent_menu, UINT submenu_id, TCHAR* wmenutitle) {
+
+		HMENU submenu;
+		MENUITEMINFO submenu_info;
+		submenu = CreatePopupMenu();
+		submenu_info = { 0 };
+		submenu_info.cbSize = sizeof(MENUITEMINFO);
+		submenu_info.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
+		submenu_info.hSubMenu = submenu;
+		submenu_info.dwTypeData = wmenutitle;
+		submenu_info.wID = submenu_id;
+
+		bldMenuHeader(submenu);
+
+		InsertMenuItem(parent_menu, submenu_id, false, &submenu_info);
+	}
+
+	bool CListControlQueue::bldMenuListItems(CMenuHandle menu) {
+
+		static_api_ptr_t<playlist_manager_v5> playlist_api;
+		bool active_fault = playlist_api->get_active_playlist() == SIZE_MAX;
+		active_fault |= playlist_api->playlist_lock_is_present(playlist_api->get_active_playlist());
+
+		pfc::list_t<t_playback_queue_item> queue;
+		playlist_api->queue_get_contents(queue);
+		t_size cq = queue.get_count();
+
+		if (menu.GetMenuItemCount()) {
+			menu.AppendMenu(MF_SEPARATOR);
+		}
+
+		menu.AppendMenu(MF_STRING, ID_REMOVE, _T("&Remove"));
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_STRING, ID_MOVE_TOP, _T("Move to &top"));
+		menu.AppendMenu(MF_STRING, ID_MOVE_BOTTOM, _T("Move to &bottom"));
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_STRING, ID_COPY, L"C&opy");
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_STRING | (active_fault ? MF_DISABLED | MF_GRAYED : 0), ID_PL_SEND_TO_CURRENT, _T("&Send to Current Playlist"));
+		menu.AppendMenu(MF_STRING | (active_fault ? MF_DISABLED | MF_GRAYED : 0), ID_PL_ADD_TO_CURRENT, _T("&Add to Current Playlist"));
+		menu.AppendMenu(MF_STRING, ID_PL_SEND_NEW, _T("Send to& New Playlist"));
+
+		bldMenuNoItems(menu);
+
+		return true;
+	}
+
+	bool CListControlQueue::bldMenuNoItems(CMenuHandle menu) {
+
+		bool res = bldMenuFrameStyle(menu);
+
+		if (!cfg_show_header) {
+			if (menu.GetMenuItemCount()) {
+				menu.AppendMenuW(MF_SEPARATOR);
+			}
+			build_sub_menu_columns(menu, ID_SUBMENU_COLUMNS, _T("Columns"));
+		}
+		if (menu.GetMenuItemCount()) {
+			menu.AppendMenuW(MF_SEPARATOR);
+		}
+		build_sub_menu_save_restore(menu, ID_SUBMENU_QUEUE_PERSIST, _T("Session queue"));
+		return true;
+	}
+
+	bool CListControlQueue::bldMenuFrameStyle(CMenuHandle menu) {
 
 		ui_element_settings* settings;
 		m_ui_host->get_configuration(&settings);
 
+		// Add Frame Style sub menu if using CUI
+		if (!m_ui_host->is_dui()) {
 
-		CRect rcHeader;
-		WINDOWPOS wPos = {};
-		HDLAYOUT layout = { &rcHeader, &wPos };
-		bool getlayout = GetHeaderCtrl().Layout(&layout);
+			if (menu.GetMenuItemCount()) {
+				menu.AppendMenuW(MF_SEPARATOR);
+			}
 
-		settings->m_show_column_header = !getlayout;
+			CMenu frame_style_submenu;
+			frame_style_submenu.CreatePopupMenu();
+			menu.AppendMenuW(MF_STRING | MF_POPUP, frame_style_submenu.m_hMenu, _T("Frame style"));
+
+			// None
+			UINT non_checked = MFT_RADIOCHECK | (settings->m_border == 0 ? MF_CHECKED : MF_UNCHECKED);
+			frame_style_submenu.AppendMenuW(non_checked, ID_BORDER_NONE, _T("None"));
+
+			// Grey
+			UINT grey_checked = MFT_RADIOCHECK | (settings->m_border == WS_EX_STATICEDGE ? MF_CHECKED : MF_UNCHECKED);
+			frame_style_submenu.AppendMenuW(grey_checked, ID_BORDER_GREY, _T("Grey"));
+
+			// Sunken
+			UINT sunken_checked = MFT_RADIOCHECK | (settings->m_border == WS_EX_CLIENTEDGE ? MF_CHECKED : MF_UNCHECKED);
+			frame_style_submenu.AppendMenuW(sunken_checked, ID_BORDER_SUNKEN, _T("Sunken"));
+		}
+		return !m_ui_host->is_dui();
 	}
 
-	void CListControlQueue::CommandListNoItemContextMenu(unsigned cmd, unsigned id_base, CPoint point) {
+	bool CListControlQueue::bldMenuPrefProp(CMenuHandle menu, bool header_hit) {
 
-		if (cmd == ID_PREFERENCES + id_base) {
-			static_api_ptr_t<ui_control>()->show_preferences(guid_preferences);
+		if (menu.GetMenuItemCount()) {
+			menu.AppendMenuW(MF_SEPARATOR);
 		}
-		else if (cmd == ID_QUEUE_SAVE) {
-			queue_persistence qp;
-			qp.writeDataFile();
+
+		menu.AppendMenuW(MF_STRING, ID_PREFERENCES, _T("Queue Editor preferences..."));
+
+		if (!header_hit && GetSelectedCount()) {
+			menu.AppendMenuW(MF_SEPARATOR);
+			menu.AppendMenuW(MF_STRING, ID_PROPERTIES, _T("Properties"));
 		}
-		else if (cmd == ID_QUEUE_RESTORE) {
-			queue_persistence qp;
-			qp.readDataFileJSON();
+		return true;
+	}
+
+	void CListControlQueue::CommandContextMenu(CPoint screen_point, unsigned cmd) {
+
+		if (!cmd) {
+			return;
+		}
+
+		ui_element_settings* settings;
+		m_ui_host->get_configuration(&settings);
+
+		if (cmdMenuCommon(cmd)       ||
+			cmdMenuHeader(cmd)     ||
+			cmdMenuNoItems(cmd)    ||
+			cmdMenuListItems(cmd)  ||
+			cmdMenuPropPref(cmd)   ||
+			cmdMenuFrameStyle(cmd))
+		{
+			//..
 		}
 		else {
-			if (!m_ui_host->is_dui()) {
-				CommandFrameStyleContextMenu(cmd, id_base, point);
+			//..
+		}
+
+	}
+
+	bool CListControlQueue::cmdMenuCommon(unsigned cmd) {
+
+		if (cmd == ID_QUEUE_SAVE) {
+
+			queue_persistence qp;
+			qp.writeDataFile();
+
+			//EXIT
+			return true;
+		}
+		else if (cmd == ID_QUEUE_RESTORE) {
+
+			queue_persistence qp;
+			qp.readDataFileJSON(true);
+
+			//EXIT
+			return true;
+		}
+
+		return false;
+	}
+
+	void CListControlQueue::CommandHeaderContextMenu(unsigned cmd, unsigned id_base, CPoint point) {
+
+		ui_element_settings* settings;
+		m_ui_host->get_configuration(&settings);
+
+		switch (cmd) {
+		case ID_RESET_HEADER:
+
+			ResetColumns();
+			InvalidateHeader();
+
+			//EXIT
+			return true;
+
+		case ID_RELATIVE_WIDTHS:
+
+			settings->m_relative_column_widths = !settings->m_relative_column_widths;
+
+			// refresh layout...
+			for (int i = 0; i < GetColumnCount(); i++) {
+
+				if (settings->m_relative_column_widths) {
+
+					if (i == GetColumnCount() - 1) {
+						//set auto width
+						ResizeColumn(i, AUTO_FLAG, false);
+					}
+					else {
+						ResizeColumn(i, AUTO_FLAG, false);
+					}
+				}
+				else {
+
+					RelayoutUIColumns();
+					GetCurrentColumnLayout();
+					InvalidateHeader();
+					break;
+				}
+			}
+
+			m_ui_host->save_configuration();
+
+			//EXIT
+			return true;
+
+		default:
+
+			if (cmd >= ID_COLUMNS_FIRST && cmd <= ID_COLUMNS_LAST) {
+
+				long column_id = m_header_ctx_menu_field_ids[cmd - ID_COLUMNS_FIRST];
+
+				PFC_ASSERT(cfg_ui_columns.exists(column_id));
+
+
+				auto old_count = settings->m_columns.get_count();
+
+				if (settings->column_exists(column_id)) {
+					//REMOVE COLUMN
+					RemoveUIHeaderColumn(column_id);
+				}
+				else {
+					//ADD COLUMN
+					AddUIHeaderColumn(column_id);
+				}
+				if (old_count != settings->m_columns.get_count()) {
+					InvalidateHeader();
+				}
+
+				//EXIT
+				return true;
+			}
+			else {
+				//..
 			}
 		}
+
+		return false;
 	}
 
-	void GetQueueMetaSelection(metadb_handle_list_ref &out, CListControlQueue* l) {
-		static_api_ptr_t<playlist_manager_v5> playlist_api;
-		pfc::list_t<t_playback_queue_item> queue;
-		playlist_api->queue_get_contents(queue);
-		pfc::list_t<t_playback_queue_item> queue_sel_items;
-		queue.get_items_mask(queue_sel_items, l->GetSelectionMask());
+	// cmd no items
 
-		for (auto w : queue_sel_items) {
-			out.add_item(w.m_handle);
+	bool CListControlQueue::cmdMenuNoItems(unsigned cmd) {
+
+		if (!m_ui_host->is_dui()) {
+			return cmdMenuFrameStyle(cmd);
 		}
-
-		queue.remove_all();
-		queue_sel_items.remove_all();
+		else {
+			return false;
+		}
 	}
 
-	void CListControlQueue::CommandListItemContextMenu(unsigned cmd, unsigned id_base, CPoint point) {
+	// cmd items
 
-		if (cmd == ID_REMOVE + id_base) {
+	bool CListControlQueue::cmdMenuListItems(unsigned cmd) {
+
+		switch (cmd) {
+
+		case ID_REMOVE:
+
 			DeleteSelected();
-		}
-		else if (cmd == ID_PREFERENCES + id_base) {
+			//EXIT
+			return true;
 
-			static_api_ptr_t<ui_control>()->show_preferences(guid_preferences);
-		}
-		else if (	cmd == ID_PL_SEND_TO_CURRENT ||
-							cmd == ID_PL_ADD_TO_CURRENT ||
-							cmd == ID_PL_SEND_NEW) {
+		case ID_PL_SEND_TO_CURRENT:
+			[[fallthrought]]
+		case ID_PL_ADD_TO_CURRENT:
+			[[fallthrought]]
+		case ID_PL_SEND_NEW: {
 
 			static_api_ptr_t<playlist_manager_v5> playlist_api;
 			metadb_handle_list mhl;
-
 			GetQueueMetaSelection(mhl, this);
 
-			switch (cmd) {
-			case ID_PL_SEND_TO_CURRENT:
+			if (cmd == ID_PL_SEND_NEW) {
 				playlist_api->activeplaylist_clear();
 				playlist_api->activeplaylist_add_items(mhl, bit_array_true());
-				break;
-			case ID_PL_ADD_TO_CURRENT:
+			}
+			else if (cmd == ID_PL_ADD_TO_CURRENT) {
 				playlist_api->activeplaylist_add_items(mhl, bit_array_true());
-				break;
-			case ID_PL_SEND_NEW:
+			}
+			else if (cmd == ID_PL_SEND_NEW) {
 				auto ndx = playlist_api->create_playlist_autoname();
 				playlist_api->playlist_add_items(ndx, mhl, bit_array_true());
-				break;
 			}
 
 			mhl.remove_all();
+
+			//EXIT
+			return true;
+
 		}
-		else if (cmd == ID_PROPERTIES || cmd == ID_COPY) {
+		case ID_PROPERTIES:
+			[[fallthrought]]
+		case ID_COPY: {
+
 			GUID guid_ctx = pfc::guid_null;
 			menu_helpers::name_to_guid_table menu_table;
 			bool bf;
@@ -649,23 +690,25 @@ namespace dlg {
 			metadb_handle_list mhl;
 			GetQueueMetaSelection(mhl, this);
 
-			bool rrs = menu_helpers::run_command_context(guid_ctx, pfc::guid_null, mhl);
+			/*bool res = */menu_helpers::run_command_context(guid_ctx, pfc::guid_null, mhl);
+
+			//EXIT
+			return true;
 		}
-		else if (	cmd == ID_MOVE_TOP    + id_base ||
-					cmd == ID_MOVE_BOTTOM + id_base) {
+		case ID_MOVE_TOP:
+			[[fallthrought]]
+		case ID_MOVE_BOTTOM: {
 
 			if (!GetSelectedCount()) {
-				return;
+				//EXIT
+				return true;
 			}
 
 			pfc::list_t<t_size> selection;
-
 			// Reordering result of the drag operation
 			pfc::list_t<t_size> ordering;
-
 			// Selection of the dragged items after reorder
 			pfc::list_t<t_size> newSelection;
-
 			auto cmask = GetItemCount();
 			auto selMask = GetSelectionMask();
 
@@ -676,63 +719,79 @@ namespace dlg {
 
 			t_size new_index = 0;
 
-			if (cmd == ID_MOVE_TOP + id_base) {
+			if (cmd == ID_MOVE_TOP) {
 				new_index = 0;
 				queue_helpers::queue_move_items_reordering(new_index, selection, newSelection, ordering);
 			}
-			else if (cmd == ID_MOVE_BOTTOM + id_base) {
+			else if (cmd == ID_MOVE_BOTTOM) {
 				new_index = GetItemCount();
 				queue_helpers::queue_move_items_reordering(new_index, selection, newSelection, ordering);
 			}
 
 			// When the refresh occurs in the listbox it tries to hold these selections
 			SetSelectedIndices(newSelection);
-
 			// Update the queue and let the new order propagate through queue events
 			queue_helpers::queue_reorder(ordering);
+
+			//EXIT
+			return true;
+
 		}
-		else if (!m_ui_host->is_dui()) {
-			//todo: check cmd before
-			CommandFrameStyleContextMenu(cmd, id_base, point);
+		default: {
+			//..
 		}
+		}
+		return false;
 	}
 
-	void CListControlQueue::CommandContextMenu(CPoint screen_point, unsigned p_id, unsigned p_id_base) {
+	bool CListControlQueue::cmdMenuFrameStyle(unsigned cmd) {
+
+		bool bres = false;
 
 		ui_element_settings* settings;
 		m_ui_host->get_configuration(&settings);
 
-		CRect headerRect;
+		auto ori_val = settings->m_border;
 
-		//if (settings->m_show_column_header) {
-			GetHeaderCtrl().GetClientRect(headerRect);
-			GetHeaderCtrl().ClientToScreen(headerRect);
-		//}
-
-		if (headerRect.PtInRect(screen_point) || !settings->m_columns.get_count()) {
-
-			// header command
-
-			CommandHeaderContextMenu(p_id, p_id_base, screen_point);
+		if (bres = cmd == ID_BORDER_NONE) {
+			settings->m_border = 0;
 		}
-		else {
-
-			// row area command
-
-			CPoint pt(screen_point);
-			ScreenToClient(&pt);
-
-			// Test if we clicked an item
-
-			auto ht = AccItemHitTest(pt);
-
-			if (ht != ~0) {
-				CommandListItemContextMenu(p_id, p_id_base, pt);
-			}
-			else {
-				CommandListNoItemContextMenu(p_id, p_id_base, screen_point);
-			}
+		else if (bres = cmd == ID_BORDER_GREY) {
+			settings->m_border = WS_EX_STATICEDGE;
 		}
+		else if (bres = cmd == ID_BORDER_SUNKEN) {
+			settings->m_border = WS_EX_CLIENTEDGE;
+		}
+		
+		if (bres && (ori_val != settings->m_border)) {
+
+			m_ui_host->save_configuration();
+			// Refresh border
+			m_ui_host->RefreshVisuals();
+		}
+
+		return bres;
+	}
+
+	bool CListControlQueue::cmdMenuPropPref(unsigned cmd) {
+
+		bool bres = false;
+
+		if (bres = cmd == ID_PROPERTIES) {
+
+			GUID guid_ctx = pfc::guid_null;
+			menu_helpers::name_to_guid_table menu_table;
+			bool bf = menu_table.search("Properties", 10, guid_ctx);
+
+			metadb_handle_list mhl;
+			GetQueueMetaSelection(mhl, this);
+
+			/*bool res = */menu_helpers::run_command_context(guid_ctx, pfc::guid_null, mhl);
+		}
+		else if (bres = cmd == ID_PREFERENCES) {
+			static_api_ptr_t<ui_control>()->show_preferences(guid_preferences);
+		}
+		return bres;
 	}
 
 	// Move items from the queue.
@@ -744,7 +803,9 @@ namespace dlg {
 
 		pfc::reorder_t(my_data, order, my_data.get_count());
 		pfc::reorder_t(my_queue, order, my_queue.get_count());
+
 		queue_helpers::queue_reorder(order);
+
 	}
 
 	// Deletes selected items from the queue.
@@ -785,7 +846,7 @@ namespace dlg {
 		int focused_item = min(lastIndexAfterRemoval, focus_before_delete);
 		SetFocusItem(focused_item);
 
-		DEBUG_PRINT << "CListControlQueue::DeleteSelected: SetItemState(focused) successful. Focus index was: " << m_focused_item;
+		DEBUG_PRINT << "CListControlQueue::DeleteSelected: SetItemState(focused) successful. Focus index was: " << focused_item;
 
 		my_data.remove_mask(selMask);
 		my_queue.remove_mask(selMask);
@@ -828,4 +889,5 @@ namespace dlg {
 		// Inform other components of the selection
 		SetSharedSelection(selected_handles);
 	}
+
 }

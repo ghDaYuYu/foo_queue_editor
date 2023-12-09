@@ -43,6 +43,7 @@ namespace dlg {
 	typedef CListControlFb2kColors <CListControlOwnerData> CListControlOwnerColors;
 
 	class CListControlQueue : public CListControlOwnerColors {
+
 	public:
 
 		CListControlQueue(ILOD_QueueSource* h, bool is_cui) : CListControlOwnerColors(h),
@@ -389,24 +390,28 @@ namespace dlg {
 		void SetHost(ui_element_host* host) { m_ui_host = host; }
 		ui_element_host* GetHost() { return m_ui_host; };
 		//todo: revise shared selections
-
 		void SetSharedSelection(metadb_handle_list_cref p_items);
 		void SetSharedSelection();
 
-		void AppendShowHeaderMenuItem(CMenuHandle menu, int ID);
-		void ShowHideColumnHeader();
+		void CommandContextMenu(CPoint screen_point, unsigned cmd);
 
-		void CommandListItemContextMenu(unsigned p_id, unsigned p_id_base, CPoint point);
-		void CommandListNoItemContextMenu(unsigned p_id, unsigned p_id_base, CPoint point);
-		void CommandFrameStyleContextMenu(unsigned p_id, unsigned p_id_base, CPoint point);
-		void CommandHeaderContextMenu(unsigned p_id, unsigned p_id_base, CPoint point);
-		void CommandContextMenu(CPoint screen_point, unsigned p_id, unsigned p_id_base);
+		bool cmdMenuCommon(unsigned cmd);
+		bool cmdMenuHeader(unsigned base_cmd);
+		bool cmdMenuListItems(unsigned base_cmd);
+		bool cmdMenuNoItems(unsigned base_cmd);
+		bool cmdMenuFrameStyle(unsigned base_cmd);
+		bool cmdMenuPropPref(unsigned base_cmd);
 
-		bool AppendFrameStyleMenuItems(CMenuHandle menu, unsigned p_id_base, CPoint point);
-		void BuildHeaderContextMenu(CMenuHandle menu, unsigned p_id_base, CPoint point);
-		void BuildListItemContextMenu(CMenuHandle menu, unsigned p_id_base, CPoint point);
-		void BuildListNoItemContextMenu(CMenuHandle menu, unsigned p_id_base, CPoint point);
-		void BuildContextMenu(CPoint screen_point, CMenuHandle menu, unsigned p_id_base);
+		void BuildContextMenu(CPoint screen_point, CMenuHandle menu);
+
+		bool bldMenuHeader(CMenuHandle menu);
+		bool bldMenuListItems(CMenuHandle menu);
+		bool bldMenuNoItems(CMenuHandle menu);
+		bool bldMenuFrameStyle(CMenuHandle menu);
+		bool bldMenuPrefProp(CMenuHandle menu, bool header_hit);
+
+		void build_sub_menu_save_restore(HMENU parent_menu, UINT submenu_id, TCHAR* wmenutitle);
+		void build_sub_menu_columns(HMENU parent_menu, UINT submenu_id, TCHAR* wmenutitle);
 
 		void DeleteSelected();
 		void MoveSelected(const size_t* order, size_t count);

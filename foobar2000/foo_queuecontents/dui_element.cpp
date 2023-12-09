@@ -19,27 +19,27 @@ dui_element::dui_element(ui_element_config::ptr config,ui_element_instance_callb
 	m_guiList.SetCallback(p_callback);
 }
 
-void dui_element::edit_mode_context_menu_build(const POINT & p_point,bool p_fromkeyboard,HMENU p_menu,unsigned p_id_base) { 
+void dui_element::edit_mode_context_menu_build(const POINT & point,bool p_fromkeyboard,HMENU menu,unsigned id_base) { 
 	TRACK_CALL_TEXT("dui_element::edit_mode_context_menu_build");
-	CMenuHandle menu(p_menu);
+	CMenuHandle menu(menu);
 
-	m_guiList.BuildContextMenu(p_point, menu, p_id_base);
+	m_guiList.BuildContextMenu(point, menu);
 }
 
-void dui_element::edit_mode_context_menu_command(const POINT & p_point,bool p_fromkeyboard,unsigned p_id,unsigned p_id_base) {
+void dui_element::edit_mode_context_menu_command(const POINT & point,bool p_fromkeyboard,unsigned cmd,unsigned id_base) {
 	TRACK_CALL_TEXT("dui_element::edit_mode_context_menu_command");
-
-	m_guiList.CommandContextMenu(p_point, p_id, p_id_base);
+	//todo: fix
+	m_guiList.CommandContextMenu(p_point, cmd);
 }
 
-bool dui_element::edit_mode_context_menu_get_focus_point(POINT & p_point) {
+bool dui_element::edit_mode_context_menu_get_focus_point(POINT & point) {
 	TRACK_CALL_TEXT("dui_element::edit_mode_context_menu_get_focus_point");
 
-	p_point = m_guiList.GetContextMenuPoint(p_point);
+	p_point = m_guiList.GetContextMenuPoint(point);
 	CPoint ptInvalid(-1, -1);
-	if (CPoint(p_point) == ptInvalid) {
+	if (CPoint(point) == ptInvalid) {
 		//no items in list
-		::GetCursorPos(&p_point);
+		::GetCursorPos(&point);
 	}
 	return true;
 }
