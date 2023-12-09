@@ -36,6 +36,7 @@ namespace dlg {
 			active_playlist_selection_mask.resize(0);
 			active_playlist_selected_items.remove_all();
 			active_playlist_all_items.remove_all();
+			ibom_selection_guids.clear();
 		}
 	};
 
@@ -45,7 +46,7 @@ namespace dlg {
 	public:
 
 		CListControlQueue(ILOD_QueueSource* h, bool is_cui) : CListControlOwnerColors(h),
-			m_cui(is_cui), m_hook() {
+			m_cui(is_cui), m_hook(), m_ui_host(nullptr) {
 
 			SetFlatStyle();
 			//..
@@ -797,7 +798,12 @@ namespace dlg {
 			}
 		}
 
-		// Drag and drop
+		void InvalidateHeader() {
+
+			RelayoutUIColumns();
+			UpdateItemsAndHeaders(bit_array_true());
+			Invalidate(true);
+		}
 
 		virtual uint32_t QueryDragDropTypes() const override {
 			return dragDrop_reorder | dragDrop_external;
@@ -851,8 +857,6 @@ namespace dlg {
 
 		ui_element_host* m_ui_host;
 		ui_element_instance_callback_ptr m_callback;
-
-		int m_focused_item;
 
 		metadb_handle_list my_selection;
 		ui_selection_holder::ptr m_shared_selection;

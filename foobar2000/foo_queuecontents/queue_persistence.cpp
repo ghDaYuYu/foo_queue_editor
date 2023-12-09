@@ -42,9 +42,10 @@ void add_rec(std::vector<json_t*> &vjson, const std::vector<pfc::string8>& vlbl,
 	GUID guid = playlist_api->playlist_get_guid(rec.m_playlist);
 
 	std::vector<pfc::string8> vrec = {
-		rec.m_handle->get_path(),                //str path
-		pfc::print_guid(guid).get_ptr(),         //str guid
-		std::to_string(rec.m_item).c_str(),      //str pos
+		rec.m_handle->get_path(),                                  //path
+		std::to_string(rec.m_handle->get_subsong_index()).c_str(), //subsong
+		pfc::print_guid(guid).get_ptr(),                           //pl_guid
+		std::to_string(rec.m_item).c_str(),                        //pos
 	};
 
 	vjson.emplace_back(json_object());
@@ -87,7 +88,7 @@ void queue_persistence::writeDataFileJSON() {
 		size_t n_entries = queue.get_count();
 
 		std::vector<json_t*> vjson;
-		std::vector<pfc::string8> vlbl = { "path", "guid", "pos" };
+		std::vector<pfc::string8> vlbl = { "path", "subsong", "guid", "pos" };
 
 		//first pass
 
@@ -123,22 +124,23 @@ void queue_persistence::writeDataFileJSON() {
 	}
 }
 
-bool queue_persistence::readDataFileJSON() {
-
+bool queue_persistence::readDataFileJSON(bool reset) {
 	try {
+
+		struct rec_per_t {
+			pfc::string8 path;
+			t_uint32 subsong = SIZE_MAX;
+			GUID guid = pfc::guid_null;
+			t_uint32 pos = SIZE_MAX;
+		};
+
 		DEBUG_PRINT << "Reading queue entries from file";
 
 		size_t clines = 0;
 		std::vector<rec_per_t> temp_data;
 
 		try {
-		
-			struct rec_per_t {
-				pfc::string8 path;
-		 	    GUID guid = pfc::guid_null;
-				t_uint32 pos = SIZE_MAX;
-			};
-		
+
 			json_error_t error;
 			auto json = json_load_file(genFilePath().c_str(), JSON_DECODE_ANY, &error);
 			if (strlen(error.text) && error.line != -1) {
@@ -165,6 +167,7 @@ bool queue_persistence::readDataFileJSON() {
 			clines = json_array_size(json);
 
 			rec_per_t elem;
+
 			size_t index;
 			json_t* js_wobj;
 
@@ -179,6 +182,15 @@ bool queue_persistence::readDataFileJSON() {
 					const char* dmp_str = json_string_value(js_fld);
 					if (dmp_str) {
 						elem.path = pfc::string8(dmp_str);
+					}
+				}
+
+				{
+					elem.subsong = 0;
+					js_fld = json_object_get(js_wobj, "subsong");
+					const char* dmp_str = json_string_value(js_fld);
+					if (dmp_str) {
+						elem.subsong = static_cast<t_uint32>(atoi(dmp_str));
 					}
 				}
 
@@ -202,6 +214,7 @@ bool queue_persistence::readDataFileJSON() {
 				}
 
 				temp_data.emplace_back(elem);
+				elem = rec_per_t();
 			}
 		}
 		catch (foobar2000_io::exception_io e) {
@@ -232,7 +245,7 @@ bool queue_persistence::readDataFileJSON() {
 				playlist_api->queue_add_item_playlist(pl_ndx, w_it->pos);
 			}
 			else {
-				metadb_handle_ptr track_bm = metadb_ptr->handle_create(w_it->path.c_str(), 0);
+				metadb_handle_ptr track_bm = metadb_ptr->handle_create(w_it->path.c_str(), w_it->subsong);
 				playlist_api->queue_add_item(track_bm);
 			}
 		}

@@ -1,12 +1,11 @@
 #include "stdafx.h"
 #include "ui_element_base.h"
 
-void ui_element_base::InvalidateWnd() {
-	TRACK_CALL_TEXT("ui_element_base::InvalidateWnd");
-	// Since listview control fills the whole space we might just as
-	// well invalidate that instead of the container window
+#include "style_manager_cui.h"
 
-	::InvalidateRect(/*get_wnd()*/m_guiList, NULL, TRUE);
+void ui_element_base::InvalidateWnd() {
+
+	m_guiList.InvalidateHeader();
 }
 
 void ui_element_base::toggleHeader(HWND parent) {
@@ -49,6 +48,8 @@ void ui_element_base::toggleHeader(HWND parent) {
 
 	m_guiList.CreateInDialog(cWndParent, IDC_QUEUELIST, newwnd);
 
+	::SetWindowLongPtr(m_guiList.m_hWnd, GWL_EXSTYLE, 0);
+
 	ClearDark();
 	m_dark.AddDialogWithControls(parent);
 
@@ -74,7 +75,9 @@ void ui_element_base::toggleHeader(HWND parent) {
 
 	m_guiList.SetHost(this);
 	m_guiList.BuildColumns(true);
-	m_guiList.Invalidate(true);
+
+	m_guiList.RelayoutUIColumns();
+	m_guiList.InvalidateHeader();
 }
 
 BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
@@ -91,6 +94,7 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 	HWND parent = (wnd != NULL) ? wnd : get_wnd();
 
 	m_guiList.CreateInDialog(parent, IDC_QUEUELIST);
+	::SetWindowLongPtr(m_guiList.m_hWnd, GWL_EXSTYLE, 0);
 
 	if (cfg_show_header) {
 		m_guiList.InitializeHeaderCtrl(HDS_DRAGDROP | HDS_BUTTONS);
@@ -112,7 +116,9 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 	// Update is needed to refresh border, see Remarks from http://msdn.microsoft.com/en-us/library/aa931583.aspx
 	SetWindowPos(get_wnd(), 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-	on_style_change();
+	on_style_change(true);
+
+	m_dark.AddDialogWithControls(parent);
 
 	window_manager::AddWindow(this);
 

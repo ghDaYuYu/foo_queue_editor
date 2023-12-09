@@ -94,7 +94,7 @@ protected:
 		}
 
 		if (repaint) {
-			m_guiList.Invalidate();
+			m_guiList.InvalidateHeader();
 		}
 	}
 

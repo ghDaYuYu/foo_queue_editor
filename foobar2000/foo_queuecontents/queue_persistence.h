@@ -11,7 +11,7 @@ public:
 
 	void writeDataFile();
 	void writeDataFileJSON();
-	bool readDataFileJSON();
+	bool readDataFileJSON(bool reset);
 
 private:
 	pfc::string8 genFilePath();

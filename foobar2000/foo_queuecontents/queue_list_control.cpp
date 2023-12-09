@@ -782,8 +782,8 @@ namespace dlg {
 
 		// Set focus rectangle
 		int lastIndexAfterRemoval = GetItemCount() - selectedCount - 1;
-		m_focused_item = min(lastIndexAfterRemoval, focus_before_delete);
-		SetFocusItem(m_focused_item);
+		int focused_item = min(lastIndexAfterRemoval, focus_before_delete);
+		SetFocusItem(focused_item);
 
 		DEBUG_PRINT << "CListControlQueue::DeleteSelected: SetItemState(focused) successful. Focus index was: " << m_focused_item;
 
