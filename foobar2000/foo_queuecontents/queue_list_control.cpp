@@ -543,7 +543,9 @@ namespace dlg {
 		return false;
 	}
 
-	void CListControlQueue::CommandHeaderContextMenu(unsigned cmd, unsigned id_base, CPoint point) {
+	// cmd header
+
+	bool CListControlQueue::cmdMenuHeader(unsigned cmd) {
 
 		ui_element_settings* settings;
 		m_ui_host->get_configuration(&settings);

@@ -232,7 +232,9 @@ bool queue_persistence::readDataFileJSON(bool reset) {
 		pfc::list_t<t_playback_queue_item> queue;
 		playlist_api->queue_get_contents(queue);
 
-		playlist_api->queue_flush();
+		if (reset) {
+			playlist_api->queue_flush();
+		}
 
 		auto metadb_ptr = metadb::get();
 
