@@ -287,7 +287,7 @@ private:
 		m_field_list.SelectNone();
 		m_field_list.ReloadItem(data.size() - 1);
 		m_field_list.OnItemsInserted(ins_pos, 1, true);
-
+		m_field_list.EnsureItemVisible(ins_pos, false);
 		listSelChanged(nullptr);
 
 		OnChanged();
