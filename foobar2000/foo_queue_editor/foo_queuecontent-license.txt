@@ -1,0 +1,4 @@
+Copyright (c) 2010, Sami Salonen
+All rights reserved.
+
+foo_queuecontents is modified and extended version of Holger Stenger's foo_locktest. foo_locktest original copyright notice can be found in the foo_locktest-licence.txt
