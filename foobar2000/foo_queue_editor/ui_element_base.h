@@ -69,7 +69,7 @@ protected:
 	//todo: style manager
 	void toggleHeader(HWND parent);
 
-	void on_style_change(bool repaint = true) {
+	void on_style_change(bool repaint) {
 
 		if (m_guiList.IsHeaderEnabled()) {
 			const LOGFONT lfh = m_cust_stylemanager->getTitleFont();

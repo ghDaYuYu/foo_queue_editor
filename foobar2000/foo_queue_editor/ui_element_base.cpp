@@ -85,7 +85,7 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 
 	if (!is_dui()) {
 		m_cust_stylemanager = new CuiStyleManager();
-		m_cust_stylemanager->setChangeHandler([&](bool) { this->on_style_change(); });
+		m_cust_stylemanager->setChangeHandler([&](bool repaint) { this->on_style_change(repaint); });
 	}
 
 	inited_successfully = false;

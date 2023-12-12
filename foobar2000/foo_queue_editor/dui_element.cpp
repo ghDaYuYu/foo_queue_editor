@@ -8,7 +8,7 @@ dui_element::dui_element(ui_element_config::ptr config,ui_element_instance_callb
 		m_callback(p_callback), m_config(config) {
 
 	m_cust_stylemanager = new DuiStyleManager(m_callback);
-	m_cust_stylemanager->setChangeHandler([&](bool) { this->on_style_change(); });
+	m_cust_stylemanager->setChangeHandler([&](bool repaint) { this->on_style_change(repaint); });
 
 	TRACK_CALL_TEXT("dui_element::dui_element");
 
