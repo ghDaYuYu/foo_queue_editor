@@ -202,15 +202,12 @@ void ui_element_base::on_changed_sorted(metadb_handle_list_cref p_items_sorted, 
 
 // window_manager calls this whenever queue changes
 void ui_element_base::Refresh() {
+
 	TRACK_CALL_TEXT("ui_element_base::Refresh");
 	{
-		NoRedrawScope tmp(m_guiList.m_hWnd);
-
+		NoRedrawScopeEx tmp(m_guiList.m_hWnd);
 		m_guiList.QueueRefresh();
-
 	}
-
-	InvalidateWnd();
 }
 
 void ui_element_base::PrefColumnsChanged(bool reset) {
