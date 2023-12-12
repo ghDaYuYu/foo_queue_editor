@@ -2,6 +2,7 @@
 #include "atlctrlx.h"
 #include "libPPUI\CListControlOwnerData.h"
 #include "libPPUI\CDialogResizeHelper.h"
+#include "libPPUI\DarkMode-CHyperLink.h"
 #include "helpers\DarkMode.h"
 #include "helpers\atl-misc.h"
 #include "header_static.h"
@@ -16,7 +17,7 @@
 #define ALIGNMENT_CENTER "Center"
 #define ALIGNMENT_RIGHT "Right"
 
-#define TT_INFO_TEXT    "%queue_index%, %queue_total%, " \
+#define TT_INFO_TEXT "%queue_index%, %queue_total%, " \
 						"%list_index% and %list_total% work here.\r\n\r\n" \
 						"Use %playlist_name% for the playlist of the queued item."
 struct field_t {
@@ -306,7 +307,7 @@ private:
 
 	fb2k::CDarkModeHooks m_dark;
 	HeaderStatic m_static_header;
-	CHyperLink m_lnk_syntax_help;
+	DarkMode::CHyperLink m_lnk_syntax_help;
 	CDialogResizeHelper m_resize_helper;
 };
 

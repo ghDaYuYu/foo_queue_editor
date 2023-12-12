@@ -13,14 +13,9 @@ CMyPreferences::~CMyPreferences() {
 }
 
 void CMyPreferences::init_syntax_link() {
-	COLORREF lnktx = GetSysColor(COLOR_MENUHILIGHT);
-	m_lnk_syntax_help.m_clrLink = lnktx;
-	m_lnk_syntax_help.m_clrVisited = lnktx;
 	pfc::stringcvt::string_wide_from_utf8 wtext(TITLEFORMAT_WIKIPAGEURL);
 	m_lnk_syntax_help.SetHyperLink((LPCTSTR)const_cast<wchar_t*>(wtext.get_ptr()));
 	m_lnk_syntax_help.SetLabel(_T("Syntax help"));
-	CRect rc; ::GetWindowRect(m_lnk_syntax_help, &rc);
-	m_lnk_syntax_help.RedrawWindow(0, 0, RDW_INVALIDATE);
 }
 
 BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
@@ -36,6 +31,11 @@ BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 	m_field_list.AddColumn(PATTERN_COLUMN_TEXT, 235);
 	m_field_list.AddColumn(ALIGNMENT_COLUMN_TEXT, 60);
 
+	uSetDlgItemText(m_hWnd, IDC_TT_OBS, TT_INFO_TEXT);
+
+	m_lnk_syntax_help.SubclassWindow(GetDlgItem(IDC_STATIC_HELP_SYNTAX));
+	init_syntax_link();
+
 	m_dark.AddDialogWithControls(m_hWnd);
 
 	m_disable_on_change = true;
@@ -47,10 +47,6 @@ BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 	uSetDlgItemText(*this, IDC_PLAYLIST_NAME, cfg_playlist_name);
 
 	m_disable_on_change = false;
-
-	uSetDlgItemText(m_hWnd, IDC_TT_OBS, TT_INFO_TEXT);
-	m_lnk_syntax_help.SubclassWindow(GetDlgItem(IDC_STATIC_HELP_SYNTAX));
-	init_syntax_link();
 
 	// Enable/Disable playlist name control
 	GetDlgItem(IDC_PLAYLIST_NAME).EnableWindow(cfg_playlist_enabled);
