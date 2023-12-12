@@ -130,7 +130,7 @@ void queue_lock::clean_lock_playlist()
 	t_size queuePlaylistIndex = find_or_create_playlist();
 	playlist_api->playlist_clear(queuePlaylistIndex);		
 	playlist_api->playlist_add_items(queuePlaylistIndex, queue_metadbs, bit_array_true());
-
+	playlist_api->playlist_clear_selection(queuePlaylistIndex);
 
 	//restore delete and insert triggers
 	updateQueuePlaylist = true;
