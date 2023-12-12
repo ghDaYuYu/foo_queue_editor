@@ -1,8 +1,8 @@
 #include "stdafx.h"
+
+#include "IBookmark.h"
 #include "queue_list_control.h"
 #include "queue_list_control_ILO.h"
-#include "foo_vbookmark/IBookmark.h"
-
 
 namespace dlg {
 
