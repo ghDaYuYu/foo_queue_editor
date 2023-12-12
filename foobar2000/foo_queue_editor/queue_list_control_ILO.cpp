@@ -32,12 +32,16 @@ namespace dlg {
 		PFC_ASSERT(count == my_data.get_count());
 
 		CListControlQueue* plc = (CListControlQueue*)(ctx);
+
 		plc->MoveSelected(order, count);
-		//todo: rev other count mismatch crash scenerios
+
+		//todo: rev other size mismatch crash scenerios
 		if (count != ctx->GetItemCount()) {
+
 			plc->ReloadData();
 			plc->ReloadItems(bit_array_true());
 			plc->SelectNone();
+
 			return false;
 		}
 		return true;
@@ -190,7 +194,7 @@ namespace dlg {
 					t_size item = selmask.find_first(true, 0, pl_item_count);
 
 					if (item < pl_item_count) {
-					
+
 						metadb_handle_list pmhl_selected;
 						metadb_handle_list pmhl_allitems;
 						playlist_api->activeplaylist_get_selected_items(pmhl_selected);

@@ -204,7 +204,7 @@ namespace dlg {
 								found_dup_it->trk_pos, dbg_count_this_dups);
 
 							mixed_rec.trk_dup = found_dup_it->trk_pos;
-							//todo: rev/remove. Misc discontinuous playlist chunks bookmarks dropped... 
+							//todo: rev/remove. Misc discontinuous playlist chunks bookmarks dropped...
 							mixed_rec.trk_pos = this_dup_ndx == SIZE_MAX ? found_dup_it->trk_pos : this_dup_ndx;
 						}
 						depri_act_playlist_mask.set(pl_track_pos, true);
@@ -252,7 +252,7 @@ namespace dlg {
 								queue_helpers::queue_insert_items(m_lastDDMark + cadd, mhl_chunk);
 							}
 							else {
-								queue_helpers::queue_add_items(mhl_chunk, true);
+								queue_helpers::queue_push_items(mhl_chunk, true);
 							}
 							cadd += mhl_chunk.get_count();
 							mhl_chunk.remove_all();
@@ -299,7 +299,7 @@ namespace dlg {
 							mhl_chunk.add_item(mhl_drop[drop_ndx]);
 							auto dbg_path = mhl_drop[drop_ndx]->get_path();
 							vmixed_chunk_ref.emplace_back(&*it_i);
-							
+
 							//todo: rev/remove
 							if (dupe) {
 								auto dbg_count_this_dups = std::count_if(first_it_i, it_i, [=](const inplay_t rec) {
@@ -380,7 +380,7 @@ namespace dlg {
 						queue_helpers::queue_insert_items(m_lastDDMark, m_mhl_dropped);
 					}
 					else {
-						queue_helpers::queue_add_items(m_mhl_dropped, true);
+						queue_helpers::queue_push_items(m_mhl_dropped, true);
 					}
 				}
 			}
@@ -389,6 +389,7 @@ namespace dlg {
 
 		void SetHost(ui_element_host* host) { m_ui_host = host; }
 		ui_element_host* GetHost() { return m_ui_host; };
+
 		//todo: revise shared selections
 		void SetSharedSelection(metadb_handle_list_cref p_items);
 		void SetSharedSelection();
@@ -780,7 +781,7 @@ namespace dlg {
 			bool relative_column_sizes = settings->m_relative_column_widths;
 
 			for (t_size i = 0; i < settings->m_columns.get_count(); i++) {
-			
+
 				// Check that the column exists
 				// Mask removed if it doesn't exist
 				long field_id = settings->m_columns[i].m_id;

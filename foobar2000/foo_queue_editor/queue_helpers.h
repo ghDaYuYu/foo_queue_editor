@@ -1,6 +1,5 @@
 #pragma once
 #include "window_manager.h" //NoRefreshScope
-#include "reorder_helpers.h"
 
 struct inplay_t {
 	size_t trk_pos = SIZE_MAX;
@@ -163,80 +162,66 @@ public:
 		}
 	}
 
-	static void move_items_hold_structure_reordering(bool up, 
-		const pfc::list_base_const_t<t_size> & indices_to_move, 
-		pfc::list_base_t<t_size> & new_indices,
-		pfc::list_t<t_size>& ordering) {
-		
-		TRACK_CALL_TEXT("queue_helpers::move_items_hold_structure_reordering");
-	
-		t_size queueCount =  static_api_ptr_t<playlist_manager>()->queue_get_count();
-		reorder_helpers::move_items_hold_structure_reordering(up, indices_to_move, new_indices, ordering, queueCount);
-	}
-
-	// Calculates the reordering when items move in to moveIndex
-	static void queue_move_items_reordering(int moveIndex, const pfc::list_base_const_t<t_size> & indicesToMove, pfc::list_base_t<t_size> & newIndices, pfc::list_t<t_size>& ordering) {
-		TRACK_CALL_TEXT("queue_helpers::queue_move_items_reordering");
-
-		int queueCount =  pfc::downcast_guarded<int>( static_api_ptr_t<playlist_manager>()->queue_get_count() );
-		reorder_helpers::move_items_reordering(moveIndex, indicesToMove, newIndices, ordering, queueCount);
-
-	}
-
 	/**
 	* Add items to queue at a specific position
 	*/
 	static void queue_add_items(t_size p_base, const pfc::list_base_const_t<metadb_handle_ptr> & p_data) {
+
 		TRACK_CALL_TEXT("queue_helpers::queue_add_items p_base overload");
 		static_api_ptr_t<playlist_manager> playlist_api;
 		t_size dataSize = p_data.get_size();
-		t_size queueSizeBefore = playlist_api->queue_get_count();
-		t_size queueSizeAfter = queueSizeBefore + dataSize;
+		t_size queue_old_size = playlist_api->queue_get_count();
+		t_size queue_new_size = queue_old_size + dataSize;
 		int moveIndex = pfc::downcast_guarded<int>(p_base);
 
-		PFC_ASSERT( p_base <= queueSizeBefore );
-		
+		PFC_ASSERT( p_base <= queue_old_size);
+
 		NoRefreshScope tmp;
 
 		// 1. Add items to the end of queue
-		queue_add_items(p_data, false);
+		queue_push_items(p_data, false);
+
+		pfc::bit_array_bittable ori_mask(bit_array_false(), queue_new_size);
 
 		// 2. Reorder items in the queue so that are in the correct place
 		pfc::list_t<t_size> indicesToMove;
 		pfc::list_t<t_size> newIndices;
 		pfc::list_t<t_size> ordering;
-		for(t_size j = queueSizeBefore; j < queueSizeAfter; j++) {
+		for(t_size j = queue_old_size; j < queue_new_size; j++) {
+			ori_mask.set(j, true);
 			indicesToMove.add_item(j);
 		}
 
-		queue_move_items_reordering(moveIndex, indicesToMove, newIndices, ordering);
-		queue_reorder(ordering);
+		size_t itemCount = p_data.get_count();
+		size_t insertMark = moveIndex;
+		pfc::array_t<size_t> out; out.resize(queue_new_size);
+		
+		bool res = pfc::create_drop_permutation(out.get_ptr(), queue_new_size, ori_mask, p_base);
 
+		queue_reorder(out.get_ptr());
 	}
 
-	static void queue_add_items(const pfc::list_base_const_t<metadb_handle_ptr> & p_data, bool refreshScopeEnabled = true) {
+	static void queue_push_items(const pfc::list_base_const_t<metadb_handle_ptr> & p_data, bool refreshScopeEnabled = true) {
+
 		TRACK_CALL_TEXT("queue_helpers::queue_add_items");
+
 		static_api_ptr_t<playlist_manager> playlist_api;
-		t_size dataSize = p_data.get_size();
-		
+
 		//disable updating queue UIs
 		NoRefreshScope tmp(refreshScopeEnabled);
 
-		for(t_size j = 0; j < dataSize; j++)
+		for(t_size j = 0; j < p_data.get_size(); j++)
 		{
 			//..
 			playlist_api->queue_add_item(p_data[j]);
 			//..
 		}
-		
 	}
 
 	static void queue_reorder(const t_size* p_order) {
 		TRACK_CALL_TEXT("queue_helpers::queue_reorder");
 		static_api_ptr_t<playlist_manager> playlist_api;
 		pfc::list_t<t_playback_queue_item> queue;
-
-	
 
 		playlist_api->queue_get_contents(queue);
 		queue.reorder(p_order);

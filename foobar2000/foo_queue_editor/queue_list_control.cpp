@@ -742,21 +742,22 @@ namespace dlg {
 				selection.add_item(n);
 			}
 
-			t_size new_index = 0;
+			pfc::array_t<size_t>out; out.resize(GetItemCount());
+			auto maskSelected = GetSelectionMask();
 
 			if (cmd == ID_MOVE_TOP) {
-				new_index = 0;
-				queue_helpers::queue_move_items_reordering(new_index, selection, newSelection, ordering);
+				size_t itemCount = GetItemCount();
+				size_t insertMark = 0;
+				bool res = pfc::create_drop_permutation(out.get_ptr(), itemCount, maskSelected, insertMark);
+
 			}
 			else if (cmd == ID_MOVE_BOTTOM) {
-				new_index = GetItemCount();
-				queue_helpers::queue_move_items_reordering(new_index, selection, newSelection, ordering);
+				size_t itemCount, insertMark;
+				itemCount = insertMark = GetItemCount();
+				bool res = pfc::create_drop_permutation(out.get_ptr(), itemCount, maskSelected, insertMark);
 			}
 
-			// When the refresh occurs in the listbox it tries to hold these selections
-			SetSelectedIndices(newSelection);
-			// Update the queue and let the new order propagate through queue events
-			queue_helpers::queue_reorder(ordering);
+			RequestReorder(out.get_ptr(), GetItemCount());
 
 			//EXIT
 			return true;
