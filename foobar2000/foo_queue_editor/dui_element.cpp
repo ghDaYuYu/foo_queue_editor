@@ -68,8 +68,7 @@ void dui_element::HideHeader() {
 }
 
 void dui_element::RefreshVisuals() {
-	//todo: remove
-	return;
+	Invalidate();
 }
 
 void dui_element::notify(const GUID & p_what, t_size p_param1, const void * p_param2, t_size p_param2size) {

@@ -228,6 +228,8 @@ bool queue_persistence::readDataFileJSON(bool reset) {
 
 		DEBUG_PRINT << "Restored " << std::to_string(clines).c_str() << " queue entries from file";
 
+		window_manager::EnableUpdates(false);
+
 		static_api_ptr_t<playlist_manager_v5> playlist_api;
 		pfc::list_t<t_playback_queue_item> queue;
 		playlist_api->queue_get_contents(queue);
@@ -251,6 +253,8 @@ bool queue_persistence::readDataFileJSON(bool reset) {
 				playlist_api->queue_add_item(track_bm);
 			}
 		}
+
+		window_manager::EnableUpdates(true);
 
 	}
 	catch (...) {

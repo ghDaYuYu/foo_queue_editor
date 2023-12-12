@@ -807,7 +807,13 @@ namespace dlg {
 
 			RelayoutUIColumns();
 			UpdateItemsAndHeaders(bit_array_true());
+
+			if (cfg_show_header) {
+				GetHeaderCtrl().Invalidate(true);
+			}
+
 			Invalidate(true);
+
 		}
 
 		virtual uint32_t QueryDragDropTypes() const override {

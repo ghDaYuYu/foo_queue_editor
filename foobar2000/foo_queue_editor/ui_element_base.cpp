@@ -5,7 +5,11 @@
 
 void ui_element_base::InvalidateWnd() {
 
-	m_guiList.InvalidateHeader();
+	TRACK_CALL_TEXT("ui_element_base::InvalidateWnd");
+
+	m_guiList.UpdateItemsAndHeaders(bit_array_true());
+	m_guiList.Invalidate(true);
+
 }
 
 void ui_element_base::toggleHeader(HWND parent) {
@@ -72,12 +76,7 @@ void ui_element_base::toggleHeader(HWND parent) {
 	SetWindowPos(get_wnd(), 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
 	on_style_change(true);
-
-	m_guiList.SetHost(this);
-	m_guiList.BuildColumns(true);
-
-	m_guiList.RelayoutUIColumns();
-	m_guiList.InvalidateHeader();
+	InvalidateWnd();
 }
 
 BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
@@ -118,7 +117,7 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 
 	on_style_change(true);
 
-	m_dark.AddDialogWithControls(parent);
+	InvalidateWnd();
 
 	window_manager::AddWindow(this);
 

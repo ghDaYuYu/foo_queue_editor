@@ -94,7 +94,9 @@ protected:
 		}
 
 		if (repaint) {
-			m_guiList.InvalidateHeader();
+
+			m_guiList.UpdateItemsAndHeaders(bit_array_true());
+			m_guiList.Invalidate(true);
 		}
 	}
 
@@ -104,7 +106,7 @@ protected:
 			::SetWindowLongPtr(/*get_wnd()*/m_guiList, GWL_EXSTYLE, 0);
 		}
 		else {
-			::SetWindowLongPtr(/*get_wnd()*/m_guiList, GWL_EXSTYLE, m_settings.m_border);
+			::SetWindowLongPtr(get_wnd(), GWL_EXSTYLE, m_settings.m_border);
 		}
 
 		// todo: rev. Update is needed to refresh border, see Remarks from http://msdn.microsoft.com/en-us/library/aa931583.aspx
