@@ -8,7 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Performance1.psess = Performance1.psess
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "foo_queue_editor", "foo_queuecontents.vcxproj", "{85FBFD09-0099-4FE9-9DB6-78DB6F60F817}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "foo_queue_editor", "foo_queue_editor.vcxproj", "{85FBFD09-0099-4FE9-9DB6-78DB6F60F817}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7729EB82-4069-4414-964B-AD399091A03F} = {7729EB82-4069-4414-964B-AD399091A03F}
 		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E} = {93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}
@@ -29,7 +29,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libPPUI", "..\..\libPPUI\li
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pfc", "..\..\pfc\pfc.vcxproj", "{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jansson", "..\foo_queuecontents libs\jansson-2.14\build\jansson.vcxproj", "{A0033952-F97C-3594-A9A1-4ABAF51AF144}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jansson", "..\foo_queue_editor libs\jansson-2.14\build\jansson.vcxproj", "{A0033952-F97C-3594-A9A1-4ABAF51AF144}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

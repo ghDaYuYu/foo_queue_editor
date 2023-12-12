@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -24,13 +24,13 @@
     <ClCompile Include="preferences.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="queuecontents_initquit.cpp">
+    <ClCompile Include="initquit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="queuecontents_lock.cpp">
+    <ClCompile Include="queue_lock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="queuecontents_queue_callback.cpp">
+    <ClCompile Include="queue_callback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
@@ -42,7 +42,7 @@
     <ClCompile Include="ui_element_configuration.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="uie_element.cpp">
+    <ClCompile Include="cui_element.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="window_manager.cpp">
@@ -51,25 +51,28 @@
     <ClCompile Include="config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DragSourceNotifyImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DropSourceImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DropTargetImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dui_element.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="listbox.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="queuecontents_titleformat_hook.cpp">
+    <ClCompile Include="queue_titleformat_hook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="playlist_queue_item_watcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="queue_list_control.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="header_static.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="queue_list_control_ILO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="queue_persistence.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBookmark.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -141,41 +144,38 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="queue_list_control.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="header_static.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
+    <ClInclude Include="yesno_dialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui_element_base.h">
+    <ClInclude Include="queue_list_control_ILO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui_element_configuration.h">
+    <ClInclude Include="style_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="uie_element.h">
+    <ClInclude Include="style_manager_cui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="window_manager.h">
+    <ClInclude Include="style_manager_dui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="queuecontents_titleformat_hook.h">
+    <ClInclude Include="queue_persistence.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="playlist_queue_item_watcher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ui_element_host.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="version.h">
+    <ClInclude Include="IBookmark.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="foo_queuecontents.rc">
+    <ResourceCompile Include="foo_queue_editor.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
     <ResourceCompile Include="foo_queue_editor_ver.rc">
