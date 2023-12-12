@@ -3,6 +3,8 @@
 #include <iomanip>
 
 #include "libPPUI/listview_helper.h"
+#include "pfc/other.h"
+
 #include "queue_helpers.h"
 #include "queue_list_control.h"
 #include "queue_persistence.h"
@@ -14,8 +16,8 @@ namespace dlg {
 		//ID_SHOW_COLUMN_HEADER = 1,
 		ID_PREFERENCES = 2,
 		ID_REMOVE,
-		ID_COPY,
-		ID_PROPERTIES,
+		ID_CMD_COPY,
+		ID_CMD_PROPERTIES,
 
 		ID_PL_SEND_TO_CURRENT,
 		ID_PL_ADD_TO_CURRENT,
@@ -24,6 +26,8 @@ namespace dlg {
 		ID_SUBMENU_QUEUE_PERSIST,
 		ID_QUEUE_SAVE,
 		ID_QUEUE_RESTORE,
+		ID_QUEUE_CMD_FLUSH,
+		ID_QUEUE_CMD_STOP_AC,
 
 		ID_MOVE_TOP,
 		ID_MOVE_BOTTOM,
@@ -139,8 +143,7 @@ namespace dlg {
 		my_queue.remove_all();
 		my_queue = queue;
 
-		//todo
-		// Save focus
+		//todo save focus
 
 		m_metadbs.remove_all();
 		my_data.remove_all();
@@ -381,9 +384,14 @@ namespace dlg {
 		submenu_info.dwTypeData = wmenutitle;
 		submenu_info.wID = submenu_id;
 
-		uAppendMenu(submenu, MF_STRING, ID_QUEUE_SAVE, "Save now");
+		uAppendMenu(submenu, MF_STRING, ID_QUEUE_SAVE, "&Save now");
 		uAppendMenu(submenu, MF_SEPARATOR, 0, "");
-		uAppendMenu(submenu, MF_STRING, ID_QUEUE_RESTORE, "Restore last");
+		uAppendMenu(submenu, MF_STRING, ID_QUEUE_RESTORE, "&Restore last");
+		uAppendMenu(submenu, MF_SEPARATOR, 0, "");
+
+		auto qs = playlist_manager::get()->queue_get_count();
+		uAppendMenu(submenu, MF_STRING | (qs ? 0 : MF_GRAYED | MF_DISABLED), ID_QUEUE_CMD_FLUSH, "Flush playback &queue");
+
 		InsertMenuItem(parent_menu, submenu_id, false, &submenu_info);
 	}
 
@@ -423,7 +431,7 @@ namespace dlg {
 		menu.AppendMenu(MF_STRING, ID_MOVE_TOP, _T("Move to &top"));
 		menu.AppendMenu(MF_STRING, ID_MOVE_BOTTOM, _T("Move to &bottom"));
 		menu.AppendMenu(MF_SEPARATOR);
-		menu.AppendMenu(MF_STRING, ID_COPY, L"C&opy");
+		menu.AppendMenu(MF_STRING, ID_CMD_COPY, L"C&opy");
 		menu.AppendMenu(MF_SEPARATOR);
 		menu.AppendMenu(MF_STRING | (active_fault ? MF_DISABLED | MF_GRAYED : 0), ID_PL_SEND_TO_CURRENT, _T("&Send to Current Playlist"));
 		menu.AppendMenu(MF_STRING | (active_fault ? MF_DISABLED | MF_GRAYED : 0), ID_PL_ADD_TO_CURRENT, _T("&Add to Current Playlist"));
@@ -488,11 +496,28 @@ namespace dlg {
 			menu.AppendMenuW(MF_SEPARATOR);
 		}
 
+		pfc::string8 name;
+		bool bsaq_checked = false;
+		bool bsaq_available;
+		GUID guid_saq;
+		if (bsaq_available = mainmenu_commands_v3::g_find_by_name("Stop after queue", guid_saq)) {
+			service_ptr_t<class mainmenu_commands> mc;
+			t_uint32 mc_ndx;
+			if (menu_item_resolver::g_resolve_main_command(guid_saq, mc, mc_ndx)) {
+				pfc::string8 buf;
+				t_uint32 flag;
+				if (mc->get_display(0, buf, flag)) {
+					bsaq_checked = flag == 2;
+				}
+			}
+			menu.AppendMenuW(MF_STRING | bsaq_checked ? MF_CHECKED : 0, ID_QUEUE_CMD_STOP_AC, _T("Stop after queue"));
+		}
+
 		menu.AppendMenuW(MF_STRING, ID_PREFERENCES, _T("Queue Editor preferences..."));
 
 		if (!header_hit && GetSelectedCount()) {
 			menu.AppendMenuW(MF_SEPARATOR);
-			menu.AppendMenuW(MF_STRING, ID_PROPERTIES, _T("Properties"));
+			menu.AppendMenuW(MF_STRING, ID_CMD_PROPERTIES, _T("Properties"));
 		}
 		return true;
 	}
@@ -506,7 +531,7 @@ namespace dlg {
 		ui_element_settings* settings;
 		m_ui_host->get_configuration(&settings);
 
-		if (cmdMenuCommon(cmd)       ||
+		if (cmdMenuCommon(cmd)     ||
 			cmdMenuHeader(cmd)     ||
 			cmdMenuNoItems(cmd)    ||
 			cmdMenuListItems(cmd)  ||
@@ -523,24 +548,22 @@ namespace dlg {
 
 	bool CListControlQueue::cmdMenuCommon(unsigned cmd) {
 
-		if (cmd == ID_QUEUE_SAVE) {
+		bool bres = false;
 
+		if (bres = cmd == ID_QUEUE_SAVE) {
 			queue_persistence qp;
 			qp.writeDataFile();
-
-			//EXIT
-			return true;
 		}
-		else if (cmd == ID_QUEUE_RESTORE) {
-
+		else if (bres = cmd == ID_QUEUE_RESTORE) {
 			queue_persistence qp;
 			qp.readDataFileJSON(true);
-
-			//EXIT
-			return true;
+		}
+		else if (bres = cmd == ID_QUEUE_CMD_FLUSH) {
+			static_api_ptr_t<playlist_manager_v5> playlist_api;
+			playlist_api->queue_flush();
 		}
 
-		return false;
+		return bres;
 	}
 
 	// cmd header
@@ -676,14 +699,14 @@ namespace dlg {
 			return true;
 
 		}
-		case ID_PROPERTIES:
+		case ID_CMD_PROPERTIES:
 			[[fallthrought]]
-		case ID_COPY: {
+		case ID_CMD_COPY: {
 
 			GUID guid_ctx = pfc::guid_null;
 			menu_helpers::name_to_guid_table menu_table;
 			bool bf;
-			if (cmd == ID_PROPERTIES) {
+			if (cmd == ID_CMD_PROPERTIES) {
 				bf = menu_table.search("Properties", 10, guid_ctx);
 			}
 			else {
@@ -779,7 +802,7 @@ namespace dlg {
 
 		bool bres = false;
 
-		if (bres = cmd == ID_PROPERTIES) {
+		if (bres = cmd == ID_CMD_PROPERTIES) {
 
 			GUID guid_ctx = pfc::guid_null;
 			menu_helpers::name_to_guid_table menu_table;
@@ -792,6 +815,12 @@ namespace dlg {
 		}
 		else if (bres = cmd == ID_PREFERENCES) {
 			static_api_ptr_t<ui_control>()->show_preferences(guid_preferences);
+		}
+		else if (bres = cmd == ID_QUEUE_CMD_STOP_AC) {
+			pfc::string8 name;
+			GUID guid_saq;
+			mainmenu_commands_v3::g_find_by_name("Stop after queue", guid_saq);
+			mainmenu_commands_v3::g_execute(guid_saq);
 		}
 		return bres;
 	}
