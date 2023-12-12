@@ -14,14 +14,8 @@ void ui_element_base::InvalidateWnd() {
 
 void ui_element_base::toggleHeader(HWND parent) {
 
-	//window_manager::EnableUpdates(false);
-
 	CWindow cWndParent(parent);
 	CRect client; cWndParent.GetClientRect(client);
-
-	CRect rcList;
-	m_guiList.GetClientRect(&rcList);
-	auto hwndCurrrent = cWndParent.GetDlgItem(IDC_QUEUELIST);
 
 	CRect rcHeader;
 	WINDOWPOS wPos = {};
@@ -35,43 +29,41 @@ void ui_element_base::toggleHeader(HWND parent) {
 		return;
 	}
 
-	//::EnableWindow(m_guiList.m_hWnd, false);
-
 	m_guiList.DestroyWindow();
 
-	HWND newwnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("listbox"),
+	HWND new_wnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("listbox"),
 		_T("queue listbox"),
 		WS_CHILD | WS_VISIBLE | LBS_NOTIFY,
 		client.left, client.top, client.right, client.bottom,
 		cWndParent, 0,
 		core_api::get_my_instance(), 0);
 
+	::SetWindowLongPtr(new_wnd, GWL_EXSTYLE, 0);
+
 	on_style_change(false);
 
 	cWndParent.SetFont(m_guiList.GetFont());
 
-	m_guiList.CreateInDialog(cWndParent, IDC_QUEUELIST, newwnd);
-
-	::SetWindowLongPtr(m_guiList.m_hWnd, GWL_EXSTYLE, 0);
+	m_guiList.CreateInDialog(cWndParent, IDC_QUEUELIST, new_wnd);
 
 	ClearDark();
 	m_dark.AddDialogWithControls(parent);
 
-	CRect rc_header;
-	
 	if (cfg_show_header) {
 		m_guiList.InitializeHeaderCtrl(HDS_DRAGDROP | HDS_BUTTONS);
 	}
 	else {
 		m_guiList.InitializeHeaderCtrl(HDS_HIDDEN);
 	}
-	
+
 	m_guiList.SetPlaylistStyle();
 	m_guiList.SetWantReturn(true);
 
+	m_guiList.SetHost(this);
+	m_guiList.BuildColumns(true);
+
 	setBorderStyle();
 
-	// todo: CUI test not working?
 	// Update is needed to refresh border, see Remarks from http://msdn.microsoft.com/en-us/library/aa931583.aspx
 	SetWindowPos(get_wnd(), 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
@@ -95,14 +87,14 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 	m_guiList.CreateInDialog(parent, IDC_QUEUELIST);
 	::SetWindowLongPtr(m_guiList.m_hWnd, GWL_EXSTYLE, 0);
 
+	m_dark.AddDialogWithControls(parent);
+
 	if (cfg_show_header) {
 		m_guiList.InitializeHeaderCtrl(HDS_DRAGDROP | HDS_BUTTONS);
 	}
 	else {
 		m_guiList.InitializeHeaderCtrl(HDS_HIDDEN);
 	}
-
-	m_dark.AddDialogWithControls(parent);
 
 	m_guiList.SetPlaylistStyle();
 	m_guiList.SetWantReturn(true);
