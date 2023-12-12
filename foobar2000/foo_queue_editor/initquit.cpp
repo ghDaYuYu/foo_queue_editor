@@ -7,11 +7,7 @@ void queue_initquit::on_init()
 {
 	if (cfg_load_init) {
 
-		static_api_ptr_t<playlist_manager> playlist_api;
-		pfc::list_t<t_playback_queue_item> queue;
-		playlist_api->queue_get_contents(queue);
-
-		if (!queue.get_count()) {
+		if (!playlist_manager::get()->queue_get_count()) {
 			queue_persistence qp;
 			qp.readDataFileJSON(true);
 			window_manager::VisualsChanged();

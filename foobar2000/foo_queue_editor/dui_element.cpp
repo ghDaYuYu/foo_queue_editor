@@ -21,7 +21,6 @@ dui_element::dui_element(ui_element_config::ptr config,ui_element_instance_callb
 
 void dui_element::edit_mode_context_menu_build(const POINT & point,bool p_fromkeyboard,HMENU menu,unsigned id_base) { 
 	TRACK_CALL_TEXT("dui_element::edit_mode_context_menu_build");
-	CMenuHandle menu(menu);
 
 	m_guiList.BuildContextMenu(point, menu);
 }
