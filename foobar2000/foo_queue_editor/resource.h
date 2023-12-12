@@ -5,7 +5,6 @@
 #define IDD_FORMVIEW                    101
 #define IDD_PREFERENCES                 102
 #define IDC_QUEUELIST                   1001
-#define IDC_LIST_COLUMN_FORMATS         1001
 #define IDC_PLAYLIST_NAME               1003
 #define IDC_PLAYLIST_ENABLED            1004
 #define IDC_UI_FORMAT                   1005
