@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "window_manager.h"
 
-class queuecontents_queue_callback : public playback_queue_callback {
+class queue_callback : public playback_queue_callback {
 public:
 	virtual void on_changed(t_change_origin p_origin)
 	{
@@ -9,4 +9,4 @@ public:
 	}
 };
 
-static service_factory_t< queuecontents_queue_callback > queuecontents_qcallback;
+static service_factory_t< queue_callback > queuecontents_qcallback;

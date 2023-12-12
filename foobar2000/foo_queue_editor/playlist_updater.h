@@ -2,7 +2,7 @@
 
 #include "window_manager.h"
 #include "queue_helpers.h"
-#include "queuecontents_lock.h"
+#include "queue_lock.h"
 #include "config.h"
 
 // class that responds to Refresh() function and updates the playlist to match queue contents

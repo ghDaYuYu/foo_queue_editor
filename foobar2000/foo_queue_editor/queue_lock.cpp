@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "queuecontents_lock.h"
+#include "queue_lock.h"
 #include "playlist_updater.h"
 
-service_ptr_t<queuecontents_lock> queuecontents_lock::plLock = NULL;
-playlist_updater queuecontents_lock::m_playlist_updater;
-bool queuecontents_lock::updateQueuePlaylist = true;
+service_ptr_t<queue_lock> queue_lock::plLock = NULL;
+playlist_updater queue_lock::m_playlist_updater;
+bool queue_lock::updateQueuePlaylist = true;
 
 //! Queries whether specified item insertion operation is allowed in the locked playlist.
 //! @param p_base Index from which the items are being inserted.
@@ -12,7 +12,7 @@ bool queuecontents_lock::updateQueuePlaylist = true;
 //! @param p_selection Caller-requested selection state of items being inserted.
 //! @returns True to allow the operation, false to block it.
 
-bool queuecontents_lock::query_items_add(t_size p_base, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection)
+bool queue_lock::query_items_add(t_size p_base, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection)
 {
 	TRACK_CALL_TEXT("queuecontents_lock::query_items_add");
 	DEBUG_PRINT << "query_items_add";
@@ -28,7 +28,7 @@ bool queuecontents_lock::query_items_add(t_size p_base, const pfc::list_base_con
 
 	return true;
 }
-bool queuecontents_lock::query_items_reorder(const t_size * p_order, t_size p_count)
+bool queue_lock::query_items_reorder(const t_size * p_order, t_size p_count)
 {
 	TRACK_CALL_TEXT("queuecontents_lock::query_items_reorder");
 	DEBUG_PRINT << "query_items_reorder";
@@ -48,7 +48,7 @@ bool queuecontents_lock::query_items_reorder(const t_size * p_order, t_size p_co
 
 	return true;
 }
-bool queuecontents_lock::query_items_remove(const bit_array & p_mask, bool p_force)
+bool queue_lock::query_items_remove(const bit_array & p_mask, bool p_force)
 {
 	TRACK_CALL_TEXT("queuecontents_lock::query_items_remove");
 	if(!updateQueuePlaylist) {
@@ -64,51 +64,51 @@ bool queuecontents_lock::query_items_remove(const bit_array & p_mask, bool p_for
 
 	return true;
 }
-bool queuecontents_lock::query_item_replace(t_size p_index,const metadb_handle_ptr & p_old,const metadb_handle_ptr & p_new)
+bool queue_lock::query_item_replace(t_size p_index,const metadb_handle_ptr & p_old,const metadb_handle_ptr & p_new)
 {
 	// do not allow replace
 	return false;
 }
-bool queuecontents_lock::query_playlist_rename(const char * p_new_name,t_size p_new_name_len)
+bool queue_lock::query_playlist_rename(const char * p_new_name,t_size p_new_name_len)
 {
 	TRACK_CALL_TEXT("queuecontents_lock::query_playlist_rename");
 	//update config accordingly
 	cfg_playlist_name = pfc::string8(p_new_name);
 	return true;
 }
-bool queuecontents_lock::query_playlist_remove()
+bool queue_lock::query_playlist_remove()
 {
 	return false;
 }
-bool queuecontents_lock::execute_default_action(t_size p_item)
+bool queue_lock::execute_default_action(t_size p_item)
 {		
 	// custom default action was executed
 	return true;
 }
-void queuecontents_lock::on_playlist_index_change(t_size p_new_index)
+void queue_lock::on_playlist_index_change(t_size p_new_index)
 {
 	//queuecontents_state::queuePlaylistIndex = p_new_index;
 }
-void queuecontents_lock::on_playlist_remove()
+void queue_lock::on_playlist_remove()
 {
 	//..
 }
-void queuecontents_lock::get_lock_name(pfc::string_base & p_out)
+void queue_lock::get_lock_name(pfc::string_base & p_out)
 {
 	p_out = "foo_queuecontents lock";
 }
-void queuecontents_lock::show_ui()
+void queue_lock::show_ui()
 {
 	console::formatter() << "No UI available for " COMPONENT_NAME_H ". See Settings for configuration.";
 }
 //! Queries which actions the lock filters. The return value must not change while the lock is registered with playlist_manager. The return value is a combination of one or more filter_* constants.
-t_uint32 queuecontents_lock::get_filter_mask()
+t_uint32 queue_lock::get_filter_mask()
 {
 	// Doesn't filter out much. Adding filters like remove_playlist caused problems with drag & drop behaviour
 	return playlist_lock::filter_replace;
 }
 
-void queuecontents_lock::clean_lock_playlist()
+void queue_lock::clean_lock_playlist()
 {
 	TRACK_CALL_TEXT("queuecontents_lock::clean_lock_playlist");
 	static_api_ptr_t<playlist_manager> playlist_api;
@@ -136,7 +136,7 @@ void queuecontents_lock::clean_lock_playlist()
 	updateQueuePlaylist = true;
 }
 
-void queuecontents_lock::install_lock() {
+void queue_lock::install_lock() {
 	TRACK_CALL_TEXT("queuecontents_lock::install_lock");
 	// Uninstall lock before installing
 	uninstall_lock();
@@ -149,7 +149,7 @@ void queuecontents_lock::install_lock() {
 
 	
 	//create new reference counter for queueLock-instantiation
-	plLock = new service_impl_t<queuecontents_lock>();
+	plLock = new service_impl_t<queue_lock>();
 
 	//install playlist lock
 	playlist_api->playlist_lock_install(queuePlaylistIndex, plLock);
@@ -161,7 +161,7 @@ void queuecontents_lock::install_lock() {
 }
 
 
-void queuecontents_lock::uninstall_lock() {
+void queue_lock::uninstall_lock() {
 	TRACK_CALL_TEXT("queuecontents_lock::uninstall_lock");
 	if(plLock != NULL) {
 		static_api_ptr_t<playlist_manager_v2> playlist_api;
@@ -176,7 +176,7 @@ void queuecontents_lock::uninstall_lock() {
 }
 
 
-t_size queuecontents_lock::find_or_create_playlist() {
+t_size queue_lock::find_or_create_playlist() {
 	t_size playlist_index = find_playlist();
 	if(playlist_index == pfc::infinite_size) {
 		static_api_ptr_t<playlist_manager_v2> playlist_api;
@@ -186,7 +186,7 @@ t_size queuecontents_lock::find_or_create_playlist() {
 	return playlist_index;
 }
 
-t_size queuecontents_lock::find_playlist() {
+t_size queue_lock::find_playlist() {
 	static_api_ptr_t<playlist_manager_v2> playlist_api;
 	t_size playlist_count = playlist_api->get_playlist_count();
 	for(t_size i = 0; i < playlist_count; i++) {

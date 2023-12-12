@@ -6,7 +6,7 @@
 #include "libPPUI/CListControlOwnerData.h"
 #include "helpers/CListControlFb2kColors.h"
 
-#include "queuecontents_titleformat_hook.h" 
+#include "queue_titleformat_hook.h" 
 #include "queue_helpers.h"
 
 #include "ui_element_host.h"

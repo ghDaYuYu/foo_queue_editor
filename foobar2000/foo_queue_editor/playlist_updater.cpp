@@ -1,18 +1,18 @@
 #include "stdafx.h"
 #include "playlist_updater.h"
-#include "queuecontents_lock.h"
+#include "queue_lock.h"
 #include "queue_helpers.h"
 
 void playlist_updater::Refresh(){
 	TRACK_CALL_TEXT("playlist_updater::Refresh");
 	DEBUG_PRINT << "Updating queue playlist";
-	if(!queuecontents_lock::updateQueuePlaylist || !cfg_playlist_enabled) {
+	if(!queue_lock::updateQueuePlaylist || !cfg_playlist_enabled) {
 		DEBUG_PRINT << "Updating queue playlist....Stopping the update";
 		return;
 	}
 
 	static_api_ptr_t<playlist_manager> playlist_api;
-	t_size queuePlaylistIndex = queuecontents_lock::find_or_create_playlist();
+	t_size queuePlaylistIndex = queue_lock::find_or_create_playlist();
 
 	pfc::list_t<t_playback_queue_item> queue;
 	pfc::list_t<metadb_handle_ptr> queue_metadbs;
@@ -30,7 +30,7 @@ void playlist_updater::Refresh(){
 
 
 	//disable delete and insert triggers
-	queuecontents_lock::updateQueuePlaylist = false;	
+	queue_lock::updateQueuePlaylist = false;	
 
 	playlist_api->playlist_clear(queuePlaylistIndex);		
 	bool playlist_add_item_ok = playlist_api->playlist_add_items(queuePlaylistIndex, queue_metadbs, bit_array_true());
@@ -38,7 +38,7 @@ void playlist_updater::Refresh(){
 
 
 	//restore delete and insert triggers
-	queuecontents_lock::updateQueuePlaylist = true;
+	queue_lock::updateQueuePlaylist = true;
 
 	//restore selection
 	playlist_api->playlist_set_selection(queuePlaylistIndex, bit_array_true(), curSel);

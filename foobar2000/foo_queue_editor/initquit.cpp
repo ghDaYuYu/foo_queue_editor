@@ -3,7 +3,7 @@
 #include "queue_persistence.h"
 #include "initquit.h"
 
-void queuecontents_initquit::on_init() 
+void queue_initquit::on_init() 
 {
 	if (cfg_load_init) {
 
@@ -18,21 +18,20 @@ void queuecontents_initquit::on_init()
 		}
 	}
 	if(cfg_playlist_enabled) {
-		queuecontents_lock::install_lock();
+		queue_lock::install_lock();
 	}
 
 	watcher.attach(new playlist_queue_item_watcher());
 }
 
-void queuecontents_initquit::on_quit() {
+void queue_initquit::on_quit() {
 
 	if (cfg_save_quit) {
 		queue_persistence qp;
 		qp.writeDataFile();
 	}
 
-	queuecontents_lock::uninstall_lock();
+	queue_lock::uninstall_lock();
 	watcher.release();
 }
-
-static initquit_factory_t<queuecontents_initquit> initquitter;
+static initquit_factory_t<queue_initquit> initquitter;

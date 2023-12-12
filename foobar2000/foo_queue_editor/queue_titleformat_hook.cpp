@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "queuecontents_titleformat_hook.h"
+#include "queue_titleformat_hook.h"
 
 void queuecontents_titleformat_hook::setData(t_size queue_index, t_playback_queue_item queue_item) {
 	// We consider the item "dead" if either the playlist or item index is undefined (i.e. infinite)

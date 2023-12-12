@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include <algorithm>
+
+#include "queue_lock.h"
 #include "yesno_dialog.h"
 #include "preferences.h"
 
@@ -242,16 +244,16 @@ void CMyPreferences::apply() {
 	// Rename current queue playlist if necessary
 	if(cfg_playlist_enabled && playlist_name != cfg_playlist_name){
 		static_api_ptr_t<playlist_manager> playlist_api;
-		t_size plIndex = queuecontents_lock::find_playlist();
+		t_size plIndex = queue_lock::find_playlist();
 		if(plIndex != pfc::infinite_size) {
 			playlist_api->playlist_rename(plIndex, playlist_name.get_ptr(), playlist_name.get_length());
 		}
 	}
 
 	if(cfg_playlist_enabled) {
-		queuecontents_lock::install_lock();
+		queue_lock::install_lock();
 	} else {
-		queuecontents_lock::uninstall_lock();
+		queue_lock::uninstall_lock();
 	}
 
 	if (m_columns_dirty) {

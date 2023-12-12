@@ -1,56 +1,40 @@
 #include "stdafx.h"
-#include "uie_element.h"
+#include "cui_element.h"
 
-const GUID uie_element::extension_guid = uie_guid;
+const GUID cui_element::extension_guid = cui_guid;
 
-HWND uie_element::get_wnd() {
-
-	return m_guiList.GetParent();
-}
-
-HWND uie_element::get_wnd() const {
+HWND cui_element::get_wnd() {
 
 	return m_guiList.GetParent();
 }
 
-bool uie_element::is_dui() {
+HWND cui_element::get_wnd() const {
+
+	return m_guiList.GetParent();
+}
+
+bool cui_element::is_dui() {
 	return false;
 }
 
-void uie_element::HideHeader() {
+void cui_element::HideHeader() {
 
 	toggleHeader(get_wnd());
 }
 
-void uie_element::RefreshVisuals() {
-	//todo: remove
-	/*TRACK_CALL_TEXT("uie_element::RefreshVisuals");
-	ui_element_base::RefreshVisuals();
-	console::formatter() << "Refresh visuals";
-	columns_ui::colours::helper vis = columns_ui::colours::helper::helper(uie_colours_client_guid);
-	
-	columns_ui::fonts::helper fonts = columns_ui::fonts::helper::helper(uie_font_client_guid);
-
-	m_guiList.SetFont(fonts.get_font());
-	*/
-	/*m_listview.SetColors(vis.get_colour(columns_ui::colours::colour_background),
-		vis.get_colour(columns_ui::colours::colour_selection_background),
-		vis.get_colour(columns_ui::colours::colour_text),
-		vis.get_colour(columns_ui::colours::colour_active_item_frame),
-		vis.get_colour(columns_ui::colours::colour_active_item_frame),
-		vis.get_colour(columns_ui::colours::colour_selection_text));
-
-	InvalidateWnd();*/
+void cui_element::RefreshVisuals() {
+	TRACK_CALL_TEXT("cui_element::RefreshVisuals");
+	InvalidateWnd();
 }
 
-void uie_element::save_configuration() {
+void cui_element::save_configuration() {
 	// In columns ui we cannot force saving of settings...So we do nothing!
 	// CUI calls get_config when its ready to save the settings
 }
 
-LRESULT uie_element::on_message(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT cui_element::on_message(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	TRACK_CALL_TEXT("uie_element::on_message");
+	TRACK_CALL_TEXT("cui_element::on_message");
 	BOOL bRet = TRUE;
 	LRESULT lResult = 0;
 	switch(uMsg)
@@ -79,7 +63,7 @@ LRESULT uie_element::on_message(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	// We do "CHAIN_MSG_MAP_MEMBER" manually here
 	if(!bRet) {
-		//DEBUG_PRINT << "uie_element did not know what to do with the message " << pfc::format_hex(uMsg)
+		//DEBUG_PRINT << "cui_element did not know what to do with the message " << pfc::format_hex(uMsg)
 		//	<< ". Passing it to m_listview";
 		if(uMsg == WM_NOTIFY) {
 			//DEBUG_PRINT << "uMsg was WM_NOTIFY, lParam->code:" << ((LPNMHDR)lParam)->code;
@@ -93,7 +77,7 @@ LRESULT uie_element::on_message(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		//} else {
 		//	DEBUG_PRINT << "m_listview did NOT handle the message";
 		//}
-	}	
+	}
 
 	if(!bRet) {
 		if(uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) {
@@ -109,6 +93,6 @@ LRESULT uie_element::on_message(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return lResult;
 }
 
-ui_extension::window_factory<uie_element> blah;
-columns_ui::colours::client::factory<queuecontents_uie_colours_client> blah2;
-columns_ui::fonts::client::factory<queuecontents_uie_fonts_client> blah3;
+ui_extension::window_factory<cui_element> blah;
+columns_ui::colours::client::factory<queue_editor_cui_colours_client> blah2;
+columns_ui::fonts::client::factory<queue_editor_cui_fonts_client> blah3;

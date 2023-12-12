@@ -5,25 +5,25 @@
 #include "../columns_ui-sdk/ui_extension.h"
 
 // {BCC2BC7F-49F3-4D70-ADC1-62B81349FD90}
-static const GUID uie_guid =
+static const GUID cui_guid =
 { 0xbcc2bc7f, 0x49f3, 0x4d70, { 0xad, 0xc1, 0x62, 0xb8, 0x13, 0x49, 0xfd, 0x90 } }; //mod
 
 // {CAA2E834-7830-4DE5-BC24-B9CF39EA6B20}
-static const GUID uie_font_client_guid =
+static const GUID cui_font_client_guid =
 { 0xcaa2e834, 0x7830, 0x4de5, { 0xbc, 0x24, 0xb9, 0xcf, 0x39, 0xea, 0x6b, 0x20 } }; //mod
 
 // {72FFF50A-E674-4ADE-83B0-CA8CC271437E}
-static const GUID uie_colours_client_guid =
+static const GUID cui_colours_client_guid =
 { 0x72fff50a, 0xe674, 0x4ade, { 0x83, 0xb0, 0xca, 0x8c, 0xc2, 0x71, 0x43, 0x7e } }; //mod
 
-class queuecontents_uie_colours_client : public columns_ui::colours::client {
+class queue_editor_cui_colours_client : public columns_ui::colours::client {
 	
 	virtual void get_name(pfc::string_base & out) const {
 		out.set_string(COMPONENT_NAME_H);
 	}
 
 	virtual const GUID & get_client_guid() const {
-		return uie_colours_client_guid;
+		return cui_colours_client_guid;
 	}
 
 	uint32_t get_supported_bools() const { // bit-mask
@@ -50,14 +50,14 @@ class queuecontents_uie_colours_client : public columns_ui::colours::client {
 	}
 #endif
 };
-class queuecontents_uie_fonts_client : public columns_ui::fonts::client  {
+class queue_editor_cui_fonts_client : public columns_ui::fonts::client  {
 
 	virtual void get_name(pfc::string_base & out) const {
 		out.set_string(COMPONENT_NAME_HC);
 	}
 	
 	virtual const GUID & get_client_guid() const {
-		return uie_font_client_guid;
+		return cui_font_client_guid;
 	}
 
 	virtual columns_ui::fonts::font_type_t get_default_font_type() const {
@@ -69,15 +69,14 @@ class queuecontents_uie_fonts_client : public columns_ui::fonts::client  {
 	}
 };
 
-class uie_element : public ui_element_base, public ui_extension::container_ui_extension { 
+class cui_element : public ui_element_base, public ui_extension::container_ui_extension { 
 //WS_EX_CONTROLPARENT 
 private:
 	static const GUID extension_guid;
-	virtual class_data & get_class_data() const 	{
+	virtual class_data & get_class_data() const {
 		__implement_get_class_data(_T("{6B864D3B-70FB-4990-B44C-AED3F2C3FCAE}"), false); //mod
 	}
 	LRESULT on_message(HWND wnd, UINT msg, WPARAM wp, LPARAM lp);
-
 public:
 	// ui_element_base
 	virtual void RefreshVisuals();

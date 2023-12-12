@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "window_manager.h"
-#include "queuecontents_lock.h"
+#include "queue_lock.h"
 
 bool window_manager::updates_enabled = true;
 std::list<window_manager_window*> window_manager::m_window_list;

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "default_ui_hacks.h"
+
 #include "config.h"
 #include "style_manager_dui.h"
 #include "dui_element.h"

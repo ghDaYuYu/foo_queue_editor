@@ -3,10 +3,10 @@
 #include "stdafx.h"
 #include "config.h"
 #include "playlist_updater.h"
-#include "queuecontents_lock.h"
+#include "queue_lock.h"
 #include "playlist_queue_item_watcher.h"
 
-class queuecontents_initquit : public initquit
+class queue_initquit : public initquit
 {
 public:
 

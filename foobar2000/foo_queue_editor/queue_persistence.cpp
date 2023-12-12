@@ -7,8 +7,8 @@
 
 #include "jansson.h"
 #include "config.h"
+#include "window_manager.h"
 #include "queue_persistence.h"
-
 
 queue_persistence::queue_persistence() {
 	//..

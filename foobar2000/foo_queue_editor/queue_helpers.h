@@ -14,7 +14,7 @@ public:
 	static void queue_remove_mask(const pfc::bit_array& p_mask) {
 		TRACK_CALL_TEXT("queue_helpers::queue_remove_mask");
 		static_api_ptr_t<playlist_manager> playlist_api;
-		
+
 		//disable updating queue UIs
 		{
 			NoRefreshScope tmp;

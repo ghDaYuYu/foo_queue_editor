@@ -4,12 +4,9 @@
 #include "libPPUI\CDialogResizeHelper.h"
 #include "helpers\DarkMode.h"
 #include "helpers\atl-misc.h"
+#include "header_static.h"
 #include "config.h"
 #include "guids.h"
-#include "queuecontents_lock.h"
-
-#include "queuecontents_lock.h"
-#include "header_static.h"
 
 #define NAME_COLUMN_TEXT "Column name"
 #define PATTERN_COLUMN_TEXT "Pattern"
