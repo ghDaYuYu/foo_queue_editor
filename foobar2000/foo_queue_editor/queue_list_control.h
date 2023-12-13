@@ -527,7 +527,7 @@ namespace dlg {
 				auto reset_cols = 2;
 				//auto reset_cols = 1;
 
-				if (cfg_ui_columns.get_count() >= reset_cols) {
+				//if (cfg_ui_columns.get_count() >= reset_cols) {
 
 					settings->m_columns.remove_all();
 
@@ -562,7 +562,7 @@ namespace dlg {
 					}
 					m_order = GetColumnOrderArray();
 					this->ReloadItems(bit_array_true());
-				}
+				//}
 				OnColumnsChanged();
 				return;
 			}

@@ -634,6 +634,8 @@ namespace dlg {
 				}
 				if (old_count != settings->m_columns.get_count()) {
 					InvalidateHeader();
+					QueueReset();
+                    QueueRefresh();
 				}
 
 				//EXIT
