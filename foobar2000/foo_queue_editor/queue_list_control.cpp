@@ -743,6 +743,7 @@ namespace dlg {
 			}
 
 			pfc::array_t<size_t>out; out.resize(GetItemCount());
+			for (auto i = 0; i < GetItemCount(); i++) { out[i] = i; }
 			auto maskSelected = GetSelectionMask();
 
 			if (cmd == ID_MOVE_TOP) {

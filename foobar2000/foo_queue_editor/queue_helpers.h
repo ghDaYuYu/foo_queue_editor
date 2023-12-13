@@ -172,7 +172,6 @@ public:
 		t_size dataSize = p_data.get_size();
 		t_size queue_old_size = playlist_api->queue_get_count();
 		t_size queue_new_size = queue_old_size + dataSize;
-		int moveIndex = pfc::downcast_guarded<int>(p_base);
 
 		PFC_ASSERT( p_base <= queue_old_size);
 
@@ -184,18 +183,16 @@ public:
 		pfc::bit_array_bittable ori_mask(bit_array_false(), queue_new_size);
 
 		// 2. Reorder items in the queue so that are in the correct place
-		pfc::list_t<t_size> indicesToMove;
-		pfc::list_t<t_size> newIndices;
-		pfc::list_t<t_size> ordering;
+
 		for(t_size j = queue_old_size; j < queue_new_size; j++) {
 			ori_mask.set(j, true);
-			indicesToMove.add_item(j);
 		}
 
 		size_t itemCount = p_data.get_count();
-		size_t insertMark = moveIndex;
+		size_t insertMark = p_base;
 		pfc::array_t<size_t> out; out.resize(queue_new_size);
-		
+		for (auto i = 0; i < queue_new_size; i++) { out[i] = i; }
+
 		bool res = pfc::create_drop_permutation(out.get_ptr(), queue_new_size, ori_mask, p_base);
 
 		queue_reorder(out.get_ptr());
