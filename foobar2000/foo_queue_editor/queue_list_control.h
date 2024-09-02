@@ -46,8 +46,8 @@ namespace dlg {
 
 	public:
 
-		CListControlQueue(ILOD_QueueSource* h, bool is_cui) : CListControlOwnerColors(h),
-			m_cui(is_cui), m_hook(), m_ui_host(nullptr) {
+		CListControlQueue(ILOD_QueueSource* h) : CListControlOwnerColors(h),
+			m_hook(), m_ui_host(nullptr) {
 
 			SetFlatStyle();
 			//..
@@ -74,6 +74,7 @@ namespace dlg {
 				}
 			}
 			MSG_WM_CONTEXTMENU(OnContextMenu)
+			MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown);
 			MSG_WM_DESTROY(OnDestroy)
 			CHAIN_MSG_MAP(TParent)
 		END_MSG_MAP()
@@ -448,6 +449,7 @@ namespace dlg {
 		void GetSelectedItemsMetaDbHandles(metadb_handle_list_ref p_out);
 
 		void OnContextMenu(CWindow wnd, CPoint point);
+		LRESULT OnKeyDown(UINT, WPARAM p_wp, LPARAM, BOOL& bHandled);
 
 		void ModColumns(pfc::map_t<long, ui_column_definition> old_ui_col_defs) {
 			ui_element_settings* settings;
@@ -864,8 +866,6 @@ namespace dlg {
 		}
 
 	private:
-
-		bool m_cui = false;
 
 		ui_element_host* m_ui_host;
 		ui_element_instance_callback_ptr m_callback;

@@ -18,7 +18,7 @@ class ui_element_base : public ui_element_host,
 
 public:
 
-	ui_element_base() : m_guiList(this, false) {
+	ui_element_base() : m_guiList(this) {
 		//..
 	}
 

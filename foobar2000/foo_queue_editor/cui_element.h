@@ -84,7 +84,7 @@ public:
 	virtual void save_configuration();
 	virtual HWND get_wnd();
 	HWND get_wnd() const;
-	virtual bool is_dui();
+	virtual bool is_dui() override;
 
 
 	virtual const GUID & get_extension_guid() const	{

@@ -9,6 +9,8 @@
 #include "queue_list_control.h"
 #include "queue_persistence.h"
 
+#include "../columns_ui-sdk/ui_extension.h"
+
 namespace dlg {
 
 	enum {
@@ -117,6 +119,17 @@ namespace dlg {
 				return;
 			}
 		}
+	}
+
+	LRESULT CListControlQueue::OnKeyDown(UINT, WPARAM p_wp, LPARAM lp, BOOL& bHandled) {
+
+		if (!m_ui_host->is_dui()) {
+			if (uie::window::g_process_keydown_keyboard_shortcuts(p_wp))
+			return 0;
+		}
+
+		bHandled = FALSE;
+		return 0;
 	}
 
 	void CListControlQueue::SetSharedSelection() {

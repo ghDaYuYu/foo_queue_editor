@@ -58,7 +58,7 @@ public:
 	// UI element configuration
 	virtual void save_configuration();
 
-	virtual bool is_dui();
+	virtual bool is_dui() override;
 
 	//WTL message map
 	BEGIN_MSG_MAP_EX(dui_element)
