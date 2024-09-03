@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include "helpers/CmdThread.h"
 
 inline ThreadUtils::cmdThread cmdThFile;
@@ -14,5 +15,5 @@ public:
 	bool readDataFileJSON(bool reset);
 
 private:
-	pfc::string8 genFilePath();
+	std::filesystem::path genFilePath();
 };

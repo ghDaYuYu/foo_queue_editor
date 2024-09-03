@@ -1,11 +1,13 @@
 #include "stdafx.h"
 
-#include <filesystem>
+#include <fcntl.h>
+#include <io.h>
+
 #include <string>
-#include <sstream>
 #include <map>
 
 #include "jansson.h"
+
 #include "config.h"
 #include "window_manager.h"
 #include "queue_persistence.h"
@@ -19,19 +21,17 @@ queue_persistence::~queue_persistence()
 	//..
 }
 
-pfc::string8 queue_persistence::genFilePath() {
+std::filesystem::path queue_persistence::genFilePath() {
 
-	static pfc::string8 path;
+	pfc::string8 n8_path = core_api::pathInProfile("configuration");
+	extract_native_path(n8_path, n8_path);
 
-	if (path.empty()) {
-		path = core_api::get_profile_path();
-		path << "\\configuration\\";
-		path << core_api::get_my_file_name();
-		path << ".dll.dat";
-		foobar2000_io::extract_native_path(path, path);
-	}
+	std::filesystem::path os_dst = std::filesystem::u8path(n8_path.c_str());
 
-	return path;
+	pfc::string8 filename = core_api::get_my_file_name();
+	filename << ".dll.dat";
+	os_dst.append(filename.c_str());
+	return os_dst;
 }
 
 void add_rec(std::vector<json_t*> &vjson, const std::vector<pfc::string8>& vlbl, const t_playback_queue_item & rec) {
@@ -73,13 +73,15 @@ void queue_persistence::writeDataFileJSON() {
 	t_size cq = queue.get_count();
 
 	if (!cq) {
-		std::filesystem::path os_file_name = std::filesystem::u8path(genFilePath().c_str());
-		if (std::filesystem::exists(os_file_name)) {
+		std::filesystem::path os_file = genFilePath();
+		if (std::filesystem::exists(os_file)) {
 			std::error_code ec;
-			std::filesystem::remove(os_file_name, ec);
+			std::filesystem::remove(os_file, ec);
 		}
 		return;
 	}
+
+	int jf = -1;
 
 	try {
 
@@ -106,9 +108,16 @@ void queue_persistence::writeDataFileJSON() {
 
 		// dump object array
 
-		std::filesystem::path os_root = genFilePath().c_str();
+		std::filesystem::path os_file = genFilePath();
 
-		auto res = json_dump_file(arr_top, os_root.u8string().c_str(), JSON_INDENT(5));
+		jf = _wopen(os_file.wstring().c_str(), _O_CREAT | _O_TRUNC | _O_WRONLY | _O_TEXT/*_O_U8TEXT*/, _S_IWRITE);
+
+		if (jf == -1) {
+			foobar2000_io::exception_io e("Open failed on output file");
+			throw e;
+		}
+		auto res = json_dumpfd(arr_top, jf, JSON_INDENT(5));
+		_close(jf);
 
 		for (auto w : vjson) {
 			free(w);
@@ -117,9 +126,15 @@ void queue_persistence::writeDataFileJSON() {
 		DEBUG_PRINT << "Wrote " << std::to_string(n_entries).c_str() << " queue entries to file";
 	}
 	catch (foobar2000_io::exception_io e) {
+		if (jf != -1) {
+			_close(jf);
+		}
 		DEBUG_PRINT << "Could not queue entries to file " << e.what();
 	}
 	catch (...) {
+		if (jf != -1) {
+			_close(jf);
+		}
 		DEBUG_PRINT << "Could not queue entries to file, Unhandled Exception";
 	}
 }
@@ -136,13 +151,25 @@ bool queue_persistence::readDataFileJSON(bool reset) {
 
 		DEBUG_PRINT << "Reading queue entries from file";
 
+		int jf = -1;
 		size_t clines = 0;
 		std::vector<rec_per_t> temp_data;
 
 		try {
 
-			json_error_t error;
-			auto json = json_load_file(genFilePath().c_str(), JSON_DECODE_ANY, &error);
+			std::filesystem::path os_file = genFilePath();
+
+			jf = _wopen(os_file.wstring().c_str(), _O_RDONLY);
+
+			if (jf == -1) {
+				foobar2000_io::exception_io e("Open failed on input file");
+				throw e;
+			}
+
+			json_error_t error = {};
+			auto json = json_loadfd(jf, JSON_DECODE_ANY, &error);
+			_close(jf);
+
 			if (strlen(error.text) && error.line != -1) {
 				DEBUG_PRINT << "JSON error: "<< error.text,
 						" in line: "   ,error.line,
@@ -218,10 +245,16 @@ bool queue_persistence::readDataFileJSON(bool reset) {
 			}
 		}
 		catch (foobar2000_io::exception_io e) {
+			if (jf != -1) {
+				_close(jf);
+			}
 			DEBUG_PRINT << "Reading data from file failed - " << e.what();
 			return false;
 		}
 		catch (...) {
+			if (jf != -1) {
+				_close(jf);
+			}
 			DEBUG_PRINT << "Reading data from file failed - Unhandled Exception";
 			return false;
 		}
