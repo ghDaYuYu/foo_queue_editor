@@ -18,6 +18,7 @@
 #define IDC_HEADER_ENABLED              1019
 #define IDC_SAVE_QUIT                   1020
 #define IDC_LOAD_INIT                   1021
+#define IDC_PLAY_INIT                   1022
 
 // Next default values for new objects
 // 

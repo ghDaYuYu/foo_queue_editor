@@ -34,6 +34,10 @@ static const GUID guid_cfg_show_header =
 static const GUID guid_cfg_load_init =
 { 0x4e149626, 0x29ba, 0x42d0, { 0x83, 0x1b, 0xee, 0x9e, 0x8f, 0xba, 0x23, 0xc8 } };
 
+// {DB8A9E1D-5173-4B79-8D36-FE4EC2F43B60}
+static const GUID guid_cfg_play_init =
+{ 0xdb8a9e1d, 0x5173, 0x4b79, { 0x8d, 0x36, 0xfe, 0x4e, 0xc2, 0xf4, 0x3b, 0x60 } };
+
 // {816465C4-2B6B-4556-A7F6-C7AA9179DECA}
 static const GUID guid_cfg_save_quit =
 { 0x816465c4, 0x2b6b, 0x4556, { 0xa7, 0xf6, 0xc7, 0xaa, 0x91, 0x79, 0xde, 0xca } };
@@ -56,6 +60,7 @@ static const GUID guid_cfg_ui_columns =
 { 0xf5da3648, 0x8655, 0x43f9, { 0xbc, 0x69, 0x67, 0xc7, 0xe5, 0x6e, 0x57, 0x4d } }; //mod
 
 static const bool default_cfg_load_init = false;
+static const bool default_cfg_play_init = false;
 static const bool default_cfg_save_quit = false;
 static const bool default_cfg_show_header = true;
 static const int default_cfg_playlist_enabled = 0;
@@ -77,6 +82,7 @@ static t_storage_impl<long, ui_column_definition> default_cfg_ui_columns[] = {
 
 extern cfg_var_legacy::cfg_bool cfg_show_header;
 extern cfg_var_legacy::cfg_bool cfg_load_init;
+extern cfg_var_legacy::cfg_bool cfg_play_init;
 extern cfg_var_legacy::cfg_bool cfg_save_quit;
 extern cfg_var_legacy::cfg_string cfg_playlist_name;
 extern cfg_var_legacy::cfg_bool cfg_playlist_enabled;

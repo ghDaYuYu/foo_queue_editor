@@ -183,6 +183,7 @@ void CMyPreferences::reset() {
 	CheckDlgButton(IDC_HEADER_ENABLED, default_cfg_show_header ? BST_CHECKED : BST_UNCHECKED);
 
 	CheckDlgButton(IDC_LOAD_INIT, default_cfg_load_init ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_PLAY_INIT, default_cfg_play_init ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_SAVE_QUIT, default_cfg_save_quit ? BST_CHECKED : BST_UNCHECKED);
 
 	CheckDlgButton(IDC_PLAYLIST_ENABLED, default_cfg_playlist_enabled ? BST_CHECKED : BST_UNCHECKED);
@@ -231,6 +232,7 @@ void CMyPreferences::apply() {
 	}
 
 	cfg_load_init = IsDlgButtonChecked(IDC_LOAD_INIT) == BST_CHECKED;
+	cfg_play_init = IsDlgButtonChecked(IDC_PLAY_INIT) == BST_CHECKED;
 	cfg_save_quit = IsDlgButtonChecked(IDC_SAVE_QUIT) == BST_CHECKED;
 
 	pfc::string8 playlist_name;
@@ -351,6 +353,8 @@ bool CMyPreferences::HasChanged() {
 
 	bool bload_init_enabled = (IsDlgButtonChecked(IDC_LOAD_INIT) == BST_CHECKED) != 0;
 	bool bload_init_changed = bload_init_enabled != cfg_load_init;
+	bool bplay_init_enabled = (IsDlgButtonChecked(IDC_PLAY_INIT) == BST_CHECKED) != 0;
+	bool bplay_init_changed = bplay_init_enabled != cfg_play_init;
 	bool bsave_quit_enabled = (IsDlgButtonChecked(IDC_SAVE_QUIT) == BST_CHECKED) != 0;
 	bool bsave_quit_changed = bsave_quit_enabled != cfg_save_quit;
 
@@ -389,7 +393,7 @@ bool CMyPreferences::HasChanged() {
 	return (playlist_enabled != playlist_enabled_cfg )
 		|| (playlist_name != cfg_playlist_name)
 		|| m_columns_dirty || bshow_header_changed
-		|| bsave_quit_changed || bload_init_changed;
+		|| bsave_quit_changed || bload_init_changed || bplay_init_changed;
 }
 
 void CMyPreferences::OnChanged() {
@@ -399,6 +403,14 @@ void CMyPreferences::OnChanged() {
 
 LRESULT CMyPreferences::OnBnClickedEnabled(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
+	OnChanged();
+	return 0;
+}
+
+LRESULT CMyPreferences::OnBnClickedLoadInitEnabled(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	// Enable/Disable play on init control
+	GetDlgItem(IDC_PLAY_INIT).EnableWindow(IsDlgButtonChecked(IDC_LOAD_INIT) == BST_CHECKED);
 	OnChanged();
 	return 0;
 }
