@@ -113,6 +113,8 @@ BOOL ui_element_base::OnInitDialog(CWindow, LPARAM, HWND wnd /*= NULL*/) {
 
 	window_manager::AddWindow(this);
 
+	Refresh();
+
 	inited_successfully = m_guiList.GetColumnCount();
 
 	DEBUG_PRINT << "ui_element_base::OnInitDialog. Inited successfully? " << inited_successfully;
