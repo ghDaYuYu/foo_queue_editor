@@ -10,7 +10,7 @@ public:
 	queue_persistence();
 	~queue_persistence();
 
-	void writeDataFile();
+	void writeDataFile(bool thread_pool);
 	void writeDataFileJSON();
 	bool readDataFileJSON(bool reset);
 

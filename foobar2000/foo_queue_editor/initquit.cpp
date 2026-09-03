@@ -24,7 +24,7 @@ void queue_initquit::on_quit() {
 
 	if (cfg_save_quit) {
 		queue_persistence qp;
-		qp.writeDataFile();
+		qp.writeDataFile(false);
 	}
 
 	queue_lock::uninstall_lock();

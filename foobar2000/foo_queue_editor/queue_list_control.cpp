@@ -565,7 +565,7 @@ namespace dlg {
 
 		if (bres = cmd == ID_QUEUE_SAVE) {
 			queue_persistence qp;
-			qp.writeDataFile();
+			qp.writeDataFile(true);
 		}
 		else if (bres = cmd == ID_QUEUE_RESTORE) {
 			queue_persistence qp;

@@ -56,8 +56,15 @@ void add_rec(std::vector<json_t*> &vjson, const std::vector<pfc::string8>& vlbl,
 	}
 }
 
-void queue_persistence::writeDataFile() {
-	cmdThFile.add([this] { writeDataFileJSON(); });
+void queue_persistence::writeDataFile(bool thread_pool) {
+	if (thread_pool) {
+		cmdThFile.add([this] { writeDataFileJSON(); });
+	}
+	else {
+		fb2k::splitTask([this]() {
+			writeDataFileJSON();
+			});
+	}
 }
 
 void queue_persistence::writeDataFileJSON() {
