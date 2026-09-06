@@ -12,6 +12,8 @@
 #include "window_manager.h"
 #include "queue_persistence.h"
 
+bool queue_persistence::m_is_dirty = false;
+
 queue_persistence::queue_persistence() {
 	//..
 }
@@ -57,17 +59,28 @@ void add_rec(std::vector<json_t*> &vjson, const std::vector<pfc::string8>& vlbl,
 }
 
 void queue_persistence::writeDataFile(bool thread_pool) {
+
+	if (!m_is_dirty) return;
+	
 	if (thread_pool) {
-		cmdThFile.add([this] { writeDataFileJSON(); });
+		cmdThFile.add([this] {
+			writeDataFileJSON();
+			m_is_dirty = false;
+		});
 	}
 	else {
 		fb2k::splitTask([this]() {
 			writeDataFileJSON();
+			m_is_dirty = false;
 			});
 	}
 }
 
 void queue_persistence::writeDataFileJSON() {
+
+	if (!m_is_dirty) {
+		return false;
+	}
 
 	if (core_api::is_quiet_mode_enabled()) {
 		DEBUG_PRINT << "Quiet mode, will not write queue entries to file";
@@ -79,7 +92,7 @@ void queue_persistence::writeDataFileJSON() {
 	playlist_api->queue_get_contents(queue);
 	t_size cq = queue.get_count();
 
-	if (!cq) {
+	if (!cq && m_is_dirty) {
 		std::filesystem::path os_file = genFilePath();
 		if (std::filesystem::exists(os_file)) {
 			std::error_code ec;
@@ -300,6 +313,8 @@ bool queue_persistence::readDataFileJSON(bool reset) {
 	catch (...) {
 		//..
 	}
+
+	m_is_dirty = false;
 
 	return true;
 }

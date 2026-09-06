@@ -174,6 +174,12 @@ namespace dlg {
 			SetFocusItem(m_focused_item);
 		}
 
+		//..
+
+		queue_persistence::SetDirty(true);
+
+		//..
+
 		ReloadData();
 		ReloadItems(bit_array_true());
 	}
