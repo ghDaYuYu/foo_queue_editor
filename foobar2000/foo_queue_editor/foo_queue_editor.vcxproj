@@ -204,6 +204,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="IBookmark.cpp" />
+    <ClCompile Include="queue_editor_menu.cpp" />
     <ClCompile Include="queue_list_control.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="dui_element.cpp" />
