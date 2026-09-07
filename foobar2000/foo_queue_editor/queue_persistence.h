@@ -21,5 +21,6 @@ public:
 private:
 	std::filesystem::path genFilePath();
 
+	static bool m_json_loaded;
 	static bool m_is_dirty;
 };

@@ -314,7 +314,13 @@ bool queue_persistence::readDataFileJSON(bool reset) {
 		//..
 	}
 
-	m_is_dirty = false;
+	if (!m_json_loaded) {
+		m_json_loaded = true;
+		m_is_dirty = false;
+	}
+	else {
+		m_is_dirty = true;
+	}	
 
 	return true;
 }
