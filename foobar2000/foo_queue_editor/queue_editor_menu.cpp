@@ -116,9 +116,6 @@ public:
 
 			queue_persistence qp;
 			qp.readDataFileJSON(true);
-			if (playlist_manager::get()->queue_get_count() && cfg_play_init.get() && !playback_control::get()->is_playing()) {
-				playback_control::get()->play_start();
-			}
 			window_manager::VisualsChanged();
 			break;
 		}
