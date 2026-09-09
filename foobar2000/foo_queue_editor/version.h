@@ -1,16 +1,16 @@
-﻿#pragma once
+#pragma once
 #define COMPONENT_NAME_H "Queue Editor"
 #define COMPONENT_NAME_HC "Queue editor"
 #define COMPONENT_DESC "Queue UI editor element."
 #define COMPONENT_NAME "foo_queue_editor"
 #define COMPONENT_NAME_DLL COMPONENT_NAME ".dll"
-#define COMPONENT_YEAR "2024"
+#define COMPONENT_YEAR "2026"
 
 #define COMPONENT_VERSION_MAJOR 2
 
 
 #define COMPONENT_VERSION_MINOR 0
-#define COMPONENT_VERSION_PATCH 6
+#define COMPONENT_VERSION_PATCH 7
 #define COMPONENT_VERSION_SUB_PATCH 0
 
 #define FIX_VER
