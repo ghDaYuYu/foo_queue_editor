@@ -27,18 +27,18 @@ void dui_element::edit_mode_context_menu_build(const POINT & point,bool p_fromke
 
 void dui_element::edit_mode_context_menu_command(const POINT & point,bool p_fromkeyboard,unsigned cmd,unsigned id_base) {
 	TRACK_CALL_TEXT("dui_element::edit_mode_context_menu_command");
-	//todo: fix
+
 	m_guiList.CommandContextMenu(p_point, cmd);
 }
 
-bool dui_element::edit_mode_context_menu_get_focus_point(POINT & point) {
+bool dui_element::edit_mode_context_menu_get_focus_point(POINT & p_point) {
 	TRACK_CALL_TEXT("dui_element::edit_mode_context_menu_get_focus_point");
 
-	p_point = m_guiList.GetContextMenuPoint(point);
+	p_point = m_guiList.GetContextMenuPoint(p_point);
 	CPoint ptInvalid(-1, -1);
-	if (CPoint(point) == ptInvalid) {
+	if (CPoint(p_point) == ptInvalid) {
 		//no items in list
-		::GetCursorPos(&point);
+		::GetCursorPos(&p_point);
 	}
 	return true;
 }
@@ -90,5 +90,15 @@ void dui_element::OnFinalMessage(HWND hWnd){
 bool dui_element::is_dui(){
 	return true;
 }
+
+// ui_element_impl_withpopup autogenerates standalone version of our component and proper menu commands. Use ui_element_impl instead if you don't want that.
+class ui_element_myimpl : public ui_element_impl_withpopup<dui_element> {
+	t_uint32 get_flags() {
+		return ui_element_v2::KFlagHavePopupCommand | ui_element_v2::KFlagSupportsBump;
+	}
+	bool bump() {
+		return ImplementBumpableElem<dui_element>::Bump();
+	}
+};
 
 static service_factory_single_t<ui_element_myimpl> g_ui_element_myimpl_factory;

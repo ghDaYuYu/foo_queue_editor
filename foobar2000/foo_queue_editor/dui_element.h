@@ -78,5 +78,3 @@ protected:
 	const ui_element_instance_callback_ptr m_callback;
 };
 
-// ui_element_impl_withpopup autogenerates standalone version of our component and proper menu commands. Use ui_element_impl instead if you don't want that.
-class ui_element_myimpl : public ui_element_impl_withpopup<dui_element> {};
