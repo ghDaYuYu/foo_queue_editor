@@ -144,12 +144,6 @@ void ui_element_base::OnSize(UINT nType, CSize size) {
 
 }
 
-BOOL ui_element_base::OnEraseBkgnd(CDCHandle dc) {
-	// We don't want to draw background since the listview
-	// fills the whole space anyway
-	return TRUE;
-}
-
 void ui_element_base::OnFinalMessage(HWND hWnd){
 	TRACK_CALL_TEXT("ui_element_base::OnFinalMessage");
 	// WE DO *NOT* detach the list view

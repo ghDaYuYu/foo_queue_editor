@@ -56,8 +56,7 @@ protected:
 
 	virtual BOOL OnInitDialog(CWindow, LPARAM, HWND wnd = NULL);
 	virtual void OnSize(UINT nType, CSize size);
-	virtual BOOL OnEraseBkgnd(CDCHandle);
-	
+
 	// Implementors: call listview's SetColors and SetFont.
 	// Base implementation updates component border.
 	virtual void HideHeader();

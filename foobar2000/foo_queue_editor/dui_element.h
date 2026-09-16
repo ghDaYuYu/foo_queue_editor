@@ -64,7 +64,6 @@ public:
 	BEGIN_MSG_MAP_EX(dui_element)
 		MSG_WM_INITDIALOG(OnInitDialog) // Init code
 		MSG_WM_SIZE(OnSize) // Handle resize
-		MSG_WM_ERASEBKGND(OnEraseBkgnd)
 		//CHAIN_MSG_MAP_MEMBER(m_guiList)
 	END_MSG_MAP()
 

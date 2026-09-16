@@ -48,9 +48,6 @@ LRESULT cui_element::on_message(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_SIZE:
 		OnSize((UINT)wParam, CSize(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)));
 		break;
-	case WM_ERASEBKGND:
-		bRet = OnEraseBkgnd((HDC)wParam);
-		break;
 	case WM_DESTROY:
 		OnFinalMessage(hWnd);
 		// Do Default action, too
